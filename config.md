@@ -12,6 +12,22 @@ options on whichever of SPY/SPX fits the budget. This is NOT the old
 16-ticker/5-strategy swing matrix — that content has been fully removed
 from this skill (it belonged to a different conversation/skill).
 
+## Timezone Handling (added after a UTC/CT date-mismatch incident)
+Every day-of-week and trading-hours check in this skill MUST be evaluated
+against America/Chicago wall-clock time explicitly — never a bare
+"today"/system date, and never UTC. A cloud Routine's ambient date context
+can already be the next calendar day in UTC while it's still evening the
+prior day in Chicago (UTC rolls over ~5-6 hours before CT does), which is
+exactly what caused a practice run to be evaluated against the wrong
+weekday. Before any Step 1-7 logic runs: explicitly compute "what is the
+current date and time in America/Chicago right now" and use THAT for the
+weekday check, the 9:00 AM-2:45 PM CT window check, and the 0DTE
+expiration date used in OSI symbol construction (SPY/SPX options expire
+based on the trading day, which is a CT/ET market concept, not UTC). If
+the resulting CT time falls outside the trading window, refuse and say so
+plainly — as happened correctly in the incident above — rather than
+proceeding on ambiguous date math.
+
 ## Underlying for the breakout signal
 **SPY only.** The opening range and breakout trigger are always computed
 from the SPY chart, regardless of which underlying's options end up being
