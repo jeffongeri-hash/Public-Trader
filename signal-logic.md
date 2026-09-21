@@ -8,9 +8,14 @@ content belonged to a different skill/conversation and has been removed.
 ## Step 1 — Capture the Opening Range (once per day, first run at 9:00 AM CT)
 
 ```
-Fetch SPY intraday bars for 9:30–10:00 AM ET (8:30–9:00 AM CT) via
-Twelve Data:get_time_series(symbol="SPY", interval="5min",
-  start_date=<today 9:30 ET>, end_date=<today 10:00 ET>)
+Fetch today's SPY 5-min bars via
+Public:get_price_history(symbol="SPY", period="DAY",
+  aggregation="FIVE_MINUTES", instrument_type="EQUITY",
+  trading_session_toggle="REGULAR_HOURS")
+
+Filter regularMarket.bars to the 9:30-10:00 AM ET window (bars timestamped
+9:30, 9:35, 9:40, 9:45, 9:50, 9:55 — each bar's timestamp is its interval's
+start, so these six bars fully cover the first 30 minutes).
 
 OR_high = max(high) across those bars
 OR_low  = min(low) across those bars
@@ -22,8 +27,10 @@ recompute mid-day, the range is fixed once the first 30 minutes are over.
 ## Step 2 — Fetch Previous Day High/Low (context only)
 
 ```
-Fetch SPY's prior trading day daily bar via Twelve Data:get_time_series
-(interval="1day", outputsize=2) → use the second-most-recent row.
+Fetch SPY's prior trading day daily bar via
+Public:get_price_history(symbol="SPY", period="WEEK", aggregation="ONE_DAY",
+  instrument_type="EQUITY") → take the second-most-recent daily bar
+  (the most recent is today, still in progress).
 
 prev_day_high, prev_day_low
 ```
@@ -46,8 +53,12 @@ public-submission.md § End-of-Day Close).
 
 ```
 Fetch the most recent completed 5-minute SPY bars via
-Twelve Data:get_time_series(symbol="SPY", interval="5min", outputsize=3)
-— discard the currently-forming bar (if the API includes it), use the two
+Public:get_price_history(symbol="SPY", period="DAY",
+  aggregation="FIVE_MINUTES", instrument_type="EQUITY",
+  trading_session_toggle="REGULAR_HOURS")
+— take regularMarket.bars, discard the currently-forming bar (the one
+whose interval hasn't fully elapsed yet — compare its timestamp + 5min
+against the explicit America/Chicago-derived current time), use the two
 most recently CLOSED bars.
 
 last_bar, prior_bar = the two most recent completed 5-min closes

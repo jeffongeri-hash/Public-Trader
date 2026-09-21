@@ -285,10 +285,16 @@ Set up as **two separate routines**:
    8:00 AM CT. Same repo connection; instructions point at
    `references/trade-log.md` § Weekly Review instead.
 
-Connectors needed on both: **Public** (trading) and **Twelve Data** (5-min
-bars) at minimum; the weekly review additionally needs **Google Drive**
-(reading the trade log) — the ORB Check routine needs it too, since it
-writes the daily log entry as part of Step 8. No Notifications tab setup
-is needed for exit alerts — Public itself sends order-fill notifications
-for every leg (entry, TP, SL) automatically; see
+Connectors needed on both: **Public** only, for both trading and 5-min bars
+(`get_price_history` covers the opening-range and breakout-check data — no
+separate market-data connector required); the weekly review additionally
+needs **Google Drive** (reading the trade log) — the ORB Check routine
+needs it too, since it writes the daily log entry as part of Step 8. No
+Notifications tab setup is needed for exit alerts — Public itself sends
+order-fill notifications for every leg (entry, TP, SL) automatically; see
 `references/public-submission.md` § Exit Alerts.
+
+**Note:** this skill previously used the Twelve Data connector for 5-min
+bars. That dependency was dropped in favor of Public's own
+`get_price_history` (proven out via a historical practice run) — Twelve
+Data can be ignored/left disabled for this skill unless re-added later.

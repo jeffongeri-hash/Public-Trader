@@ -103,9 +103,11 @@ review process (see § Weekly Review below for the review workflow itself).
 
 ## Step 1 — Capture Opening Range (9:00 AM CT run only)
 
-Fetch SPY 5-min bars for 9:30–10:00 AM ET via `Twelve Data:get_time_series`.
-OR_high = max high, OR_low = min low across that window. Store for reuse by
-every later run that day — don't recompute.
+Fetch SPY 5-min bars for 9:30–10:00 AM ET via `Public:get_price_history`
+(period="DAY", aggregation="FIVE_MINUTES") — see `references/signal-logic.md`
+§ Step 1 for the exact call and window filter. OR_high = max high, OR_low =
+min low across that window. Store for reuse by every later run that
+day — don't recompute.
 
 ## Step 2 — Previous Day Context
 
