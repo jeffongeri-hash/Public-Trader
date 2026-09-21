@@ -21,10 +21,11 @@ prior day in Chicago (UTC rolls over ~5-6 hours before CT does), which is
 exactly what caused a practice run to be evaluated against the wrong
 weekday. Before any Step 1-7 logic runs: explicitly compute "what is the
 current date and time in America/Chicago right now" and use THAT for the
-weekday check, the 9:00 AM-2:45 PM CT window check, and the 0DTE
-expiration date used in OSI symbol construction (SPY/SPX options expire
-based on the trading day, which is a CT/ET market concept, not UTC). If
-the resulting CT time falls outside the trading window, refuse and say so
+weekday check, the 10:10 AM CT breakout-check / 12:00 PM CT forced-close
+window check, and the 0DTE expiration date used in OSI symbol
+construction (SPY/SPX options expire based on the trading day, which is a
+CT/ET market concept, not UTC). If the resulting CT time doesn't match
+the scheduled run this invocation is supposed to be, refuse and say so
 plainly — as happened correctly in the incident above — rather than
 proceeding on ambiguous date math.
 
@@ -137,8 +138,8 @@ contracts = floor($400 / (premium × 100)), minimum 1
 ## Exit Rule — tiered, two-lot exit (revised 9/18/26 based on live trade data)
 The 90%/-50% unified exit was replaced after the first live trade showed
 premium peaking well short of +90% and fading fast — a fixed distant target
-was unlikely to ever fill, leaving the trade dependent on the SL or a forced
-EOD close instead.
+was unlikely to ever fill, leaving the trade dependent on the SL or a
+forced close instead.
 
 ```
 tier1_qty = ceil(N / 2)   # majority — closer, more achievable target
@@ -161,24 +162,25 @@ as before: whichever of a lot's two orders fills first, cancel the other
 **for that lot only** — the other lot's orders keep resting independently.
 All four (or two, if N=1) orders are `time_in_force="DAY"`.
 
-## End-of-Day Forced Close
-**2:45 PM CT (3:45 PM ET):** if either lot still has an open position
+## Forced Close (revised 9/20/26 — moved up from 2:45 PM CT to 12:00 PM CT at Jeff's request)
+**12:00 PM CT (1:00 PM ET):** if either lot still has an open position
 (neither its TP nor its SL has filled), submit a MARKET SELL to close that
-lot's remaining contracts. Do not let a 0DTE SPY position ride into
-physical-settlement expiration — SPX is cash-settled
-and lower-risk to hold, but SPY is not.
+lot's remaining contracts. This is a firm cutoff independent of the
+original physical-settlement rationale (SPX is cash-settled and
+lower-risk to hold, but SPY is not) — Jeff wants any lot that hasn't
+exited on its own within roughly 2 hours of entry force-closed regardless,
+rather than left open toward end of day.
 
-## Schedule
-- **9:00 AM CT (10:00 AM ET):** capture opening range (30-min high/low),
-  fetch previous day H/L for context, run the first breakout check
-  immediately using whatever 5-min bars have already closed by then.
-- **Every 5 minutes from 9:00 AM CT through 2:45 PM CT:** breakout check,
-  aligned to each new 5-min bar close (this cadence matches the 2-bar
-  confirmation rule — checking less often than every 5 minutes risks
-  missing or delaying a confirmed signal by a full bar or more).
-  (skipped once a trade has already been taken today).
-- **2:45 PM CT:** also the forced end-of-day close, run last regardless of
-  whether a new entry fired that check.
+## Schedule (revised 9/20/26 — collapsed from 5-minute polling to two runs)
+- **10:10 AM CT (11:10 AM ET), single run:** capture opening range
+  (30-min high/low), fetch previous day H/L for context, and run the
+  ONE-SHOT breakout check for the day using whatever the two most recently
+  completed 5-min bars are at that moment. This replaced continuous
+  5-minute polling from 9:00 AM CT — see `schedule-setup.md` rebuild note
+  for the tradeoff (a breakout confirming before or after 10:10 AM CT is
+  missed for the day; skipped entirely if a trade has already been taken).
+- **12:00 PM CT (1:00 PM ET), separate run:** the forced close, run
+  regardless of whether a new entry fired at 10:10 AM CT.
 
 ## Budget Warning
 0DTE SPY ATM premiums typically run $150–$400 depending on realized

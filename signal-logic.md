@@ -5,7 +5,7 @@ content belonged to a different skill/conversation and has been removed.
 
 ---
 
-## Step 1 — Capture the Opening Range (once per day, first run at 9:00 AM CT)
+## Step 1 — Capture the Opening Range (once per day, single run at 10:10 AM CT)
 
 ```
 Fetch today's SPY 5-min bars via
@@ -21,8 +21,9 @@ OR_high = max(high) across those bars
 OR_low  = min(low) across those bars
 ```
 
-Store OR_high/OR_low for reuse by every subsequent check that day — don't
-recompute mid-day, the range is fixed once the first 30 minutes are over.
+OR_high/OR_low is used immediately by this same run's Step 4 — there is no
+longer a separate later run that needs to reuse it, since the breakout
+check is now a single evaluation within this same 10:10 AM CT run.
 
 ## Step 2 — Fetch Previous Day High/Low (context only)
 
@@ -46,10 +47,10 @@ Public:get_orders(account_id="5OI27877")
 ```
 If either shows an open SPY/SPX option position or pending order opened
 today by this strategy → SKIP the rest of this run (one trade per day).
-Still perform the 2:45 PM CT forced-close check regardless (see
-public-submission.md § End-of-Day Close).
+Still perform the 12:00 PM CT forced-close check regardless (see
+public-submission.md § Forced Close).
 
-## Step 4 — Breakout Trigger (2-bar confirmation on the 5-minute chart)
+## Step 4 — Breakout Trigger (2-bar confirmation, single evaluation at 10:10 AM CT)
 
 ```
 Fetch the most recent completed 5-minute SPY bars via
@@ -72,11 +73,13 @@ elif last_bar.close < OR_low AND prior_bar.close < OR_low:
 elif last_bar.close > OR_high:
     # only the newest bar has breached — needs one more to confirm
     direction = "WATCHING — bullish, 1 of 2 bars confirmed"
-    → no trade this run, log status, re-check next run
+    → no trade today (this is a single daily check — there is no later
+      re-check within the day to see the second bar confirm), log status
 elif last_bar.close < OR_low:
     # only the newest bar has breached — needs one more to confirm
     direction = "WATCHING — bearish, 1 of 2 bars confirmed"
-    → no trade this run, log status, re-check next run
+    → no trade today (same reason — one-shot check, no intraday re-check),
+      log status
 else:
     # last_bar is back inside the range — even if prior_bar had breached,
     # that breach is now stale/reverted. Do NOT report WATCHING here.
@@ -85,13 +88,15 @@ else:
 ```
 
 **Only the MOST RECENT bar's status determines WATCHING vs NO BREAKOUT.**
-`WATCHING` means the newest completed bar just breached a boundary and
-we're waiting on the next one to confirm — it is not a general "one of the
-last two, whichever" check. If the newest bar has already closed back
-inside the range, any earlier breach is stale and reverted: report
-`NO BREAKOUT`, don't carry it forward as `WATCHING`. (An earlier version of
-this logic used a symmetric XOR-of-XOR check that could never fire the
-"one bar breached" case correctly — fixed here.)
+`WATCHING` means the newest completed bar just breached a boundary and a
+second bar would be needed to confirm — since this is now a single daily
+check, `WATCHING` and `NO BREAKOUT` both mean no trade today, but they're
+still logged distinctly for the weekly review's fakeout-rate tracking. It
+is not a general "one of the last two, whichever" check. If the newest
+bar has already closed back inside the range, any earlier breach is stale
+and reverted: report `NO BREAKOUT`, don't carry it forward as `WATCHING`.
+(An earlier version of this logic used a symmetric XOR-of-XOR check that
+could never fire the "one bar breached" case correctly — fixed here.)
 
 **A single bar beyond OR_high/OR_low is NOT enough.** Both of the two most
 recently completed 5-minute bars must close beyond the same boundary
@@ -127,22 +132,23 @@ contracts, the runner — skipped if N=1). Submit each lot's own unlinked
 TP/SL pair: Lot A at +25%/−30%, Lot B at +40%/−30%. See
 `references/public-submission.md` § ORB Submission Sequence.
 
-## Step 8 — Forced End-of-Day Close (2:45 PM CT / 3:45 PM ET run only)
+## Step 8 — Forced Close (12:00 PM CT / 1:00 PM ET run only)
 
 ```
 Check Lot A and Lot B independently.
 If either lot is still open (neither its TP nor its SL filled) → submit a
 MARKET SELL to close that lot's remaining contracts now, regardless of P&L.
 ```
-This is a hard cutoff — do not let a 0DTE SPY position ride into
-physical-settlement expiration.
+This is a hard cutoff (moved up from 2:45 PM CT to 12:00 PM CT on 9/20/26
+at Jeff's request) — any lot that hasn't exited on its own within roughly
+2 hours of the 10:10 AM CT entry gets force-closed regardless.
 
 ---
 
 ## Daily State to Track
 
 Each day is independent — no state carries from one day to the next except
-the day's own opening range (fixed once at 9:00 AM CT) and whether a trade
+the day's own opening range (fixed once at 10:10 AM CT) and whether a trade
 has already fired (checked live via `get_portfolio`/`get_orders`, no
 separate state file needed).
 

@@ -16,7 +16,7 @@ open_orders = Public:get_orders(account_id="5OI27877")
 ```
 If a same-day SPY/SPX option position or pending order from this strategy
 already exists → skip new entries this run (one trade per day). Still run
-the end-of-day forced-close check regardless (see § End-of-Day Close below).
+the forced-close check regardless (see § Forced Close below).
 
 ---
 
@@ -174,7 +174,7 @@ delivery.
 
 ---
 
-## End-of-Day Close (2:45 PM CT / 3:45 PM ET run only)
+## Forced Close (12:00 PM CT / 1:00 PM ET run only — moved up from 2:45 PM CT on 9/20/26 at Jeff's request)
 
 ```
 positions = Public:get_portfolio(account_id="5OI27877")
@@ -201,9 +201,9 @@ If Lot B still has open contracts (neither TP-B nor SL-B filled):
 ```
 
 Confirm to Jeff:
-  "⏰ EOD FORCED CLOSE — [TICKER] [strike] [call/put], [N] ct sold at
-   $[price] (P&L: $[gain/loss]). 0DTE contract would have expired
-   [ITM/OTM] otherwise." (report per lot if only one lot needed closing)
+  "⏰ FORCED CLOSE (12:00 PM CT) — [TICKER] [strike] [call/put], [N] ct sold
+   at $[price] (P&L: $[gain/loss])." (report per lot if only one lot needed
+   closing)
 
 ---
 

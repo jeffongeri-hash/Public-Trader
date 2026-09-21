@@ -15,7 +15,7 @@ if it doesn't already exist; search for it by name first via
 2. Append the new entry's markdown text to the end
 3. `Google_Drive__update_file` with the full updated content
 
-This happens automatically as part of every day's 2:45 PM CT run — logging
+This happens automatically as part of every day's 12:00 PM CT run — logging
 is not optional or a "remember to do this later" step. Every trading day
 gets an entry written to the Doc before that run's summary is displayed.
 
@@ -32,7 +32,7 @@ Opening Range: $[OR_low]-$[OR_high] | Final status: [NO BREAKOUT all day / WATCH
 ```
 
 ### Trade day (full entry) — write this the moment the position is CLOSED
-(both lots resolved, or forced EOD close), not at entry, so the log always
+(both lots resolved, or forced close), not at entry, so the log always
 contains the complete outcome, not a half-finished one:
 
 ```
@@ -52,12 +52,12 @@ contains the complete outcome, not a half-finished one:
 - Rationale: [why this was/wasn't a well-timed entry given where price was relative to the range, any notable context like VIX level or overall day trend if visible from the bars]
 
 **Exit — Lot A ([tier1_qty] ct, target +25%/-30%):**
-- Outcome: [TP-A HIT / SL-A HIT / EOD FORCED CLOSE]
+- Outcome: [TP-A HIT / SL-A HIT / FORCED CLOSE]
 - Exit price: $[price] at [HH:MM]
 - P&L (Lot A): $[gain/loss] ([+/-X]% on premium)
 
 **Exit — Lot B ([tier2_qty] ct, target +40%/-30% — omit this block if N=1):**
-- Outcome: [TP-B HIT / SL-B HIT / EOD FORCED CLOSE]
+- Outcome: [TP-B HIT / SL-B HIT / FORCED CLOSE]
 - Exit price: $[price] at [HH:MM]
 - P&L (Lot B): $[gain/loss] ([+/-X]% on premium)
 
@@ -106,10 +106,10 @@ and stop — don't fabricate a review from nothing.
 ```
 - Total trading days in the week vs. days with a confirmed trade
   (trade frequency — is the setup rare or common?)
-- Win rate PER LOT: Lot A TP-A hits vs. SL-A hits vs. EOD closes, and the
-  same breakdown for Lot B — since they now have different targets (+25%
-  vs +40%), their hit rates should be tracked and reported separately, not
-  blended into one "win rate" number
+- Win rate PER LOT: Lot A TP-A hits vs. SL-A hits vs. forced closes, and
+  the same breakdown for Lot B — since they now have different targets
+  (+25% vs +40%), their hit rates should be tracked and reported
+  separately, not blended into one "win rate" number
 - CALL vs PUT split
 - SPY vs SPX split (how often did SPX actually get used, if ever)
 - Average P&L per trade (blended across both lots), and total P&L for the week
@@ -155,7 +155,7 @@ to re-derive the stats himself.
 ```
 📊 WEEKLY REVIEW — Week of [Mon date] - [Fri date]
 Trading days: [N] | Trades taken: [N] ([X]% of days)
-Win rate: [N] TP / [N] SL / [N] EOD close ([X]% win rate)
+Win rate: [N] TP / [N] SL / [N] forced close ([X]% win rate)
 CALL/PUT split: [N]/[N] | SPY/SPX split: [N]/[N]
 Total P&L: $[amount] | Avg per trade: $[amount] | Avg hold time: [X] min
 Fakeout rate (WATCHING → never confirmed): [N] of [N] watching events ([X]%)
