@@ -152,12 +152,16 @@ delivery.
 
 ## End-of-Day Close — retired (revised 9/22/26)
 
-No bot-managed forced close. Since this routine only runs once a day at
-10:10 AM ET, there's no later run to do a close check anyway. Jeff exits
-the position himself; the STOP order from § ORB Submission Sequence is the
-only automated protection. If Jeff asks mid-day whether a position is
-still open, check with `Public:get_portfolio(account_id="5OI27877")` and
-report status plainly — don't place any order unless he asks you to.
+No bot-managed forced close, even though polling continues every 5
+minutes through 2:45 PM CT. Jeff exits the position himself, whenever he
+chooses; the STOP order from § ORB Submission Sequence is the only
+automated protection. Each mid-day run's one-trade-per-day gate (§
+Duplicate / Exposure Check) will keep finding the open position and skip
+straight to reporting status — check with
+`Public:get_portfolio(account_id="5OI27877")` and report plainly. Don't
+place any close order unless Jeff asks you to. On the final (2:45 PM CT)
+run, still just report status as-is — a position open into the close is
+Jeff's to manage, not something this skill force-closes.
 
 ---
 

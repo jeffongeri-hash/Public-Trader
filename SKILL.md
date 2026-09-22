@@ -2,33 +2,36 @@
 name: public-trader
 description: >
   Live Opening Range Breakout (ORB) 0DTE options strategy on SPY, executing
-  through the Public.com connector, account 5OI27877 (CASH). Runs ONCE per
-  day on weekdays at 10:10 AM ET (9:10 AM CT) — a single check, not 5-minute
-  polling (revised 9/22/26: the cloud routine's native Schedule trigger has
-  a 1-hour minimum interval, so continuous intraday polling isn't possible;
-  10:10 AM ET is the earliest time the 2-bar confirmation (using the
-  10:00-10:05 and 10:05-10:10 ET bars) can even be evaluated). Captures the
-  first-30-minute SPY high/low as the opening range; requires 2 CONSECUTIVE
-  completed 5-minute bars to close beyond that range before triggering (no
-  single-bar fakeouts) — a confirmed break above triggers a live BUY of a
-  same-day (0DTE) CALL, a confirmed break below triggers a live BUY of a
-  same-day PUT — on whichever of SPY/SPX fits a $400 budget (SPY by
-  default). Previous day's high/low is shown as context only, not part of
-  the trigger. One trade per day, single lot (no tiering) — entry BUY plus
-  ONE real STOP order at -30%, no take-profit order and no bot-managed
-  forced close; Jeff exits manually intraday whenever he chooses (revised
-  9/22/26 — see § Exit Rule). Every trading day (trade or no trade) gets
-  logged as a chat message in this session's own reply (revised 9/22/26 —
-  Google Drive isn't reliably available in this session, so nothing is
-  auto-written to any doc; Jeff copies the printed entry into his own log
-  at the end of each day). This is NOT the old 16-ticker 5-strategy swing
-  matrix — that content was removed from this skill entirely (it belonged
-  to a different context). ALWAYS trigger on: "run the ORB breakout
-  check", "check opening range", "SPY breakout", "opening range
-  breakout", "run the breakout scan", "check for a breakout", "run the
-  weekly review", "ORB weekly review", "how's the breakout strategy
-  doing", or any request about this SPY/SPX 0DTE strategy. Runs once a
-  day at 10:10 AM ET on weekdays, plus one weekly review run.
+  through the Public.com connector, account 5OI27877 (CASH). Runs every 5
+  minutes on weekdays starting at 10:10 AM ET (9:10 AM CT) — the earliest
+  time the 2-bar confirmation can fire (revised 9/22/26: confirmed with
+  Jeff that intraday polling stays, only the start time moved from
+  10:00 AM ET to 10:10 AM ET) — through 2:45 PM CT (3:45 PM ET). NOTE: a
+  native cloud-routine Schedule trigger has a 1-hour minimum interval and
+  cannot itself fire every 5 minutes — see `references/schedule-setup.md`
+  for the API-trigger + external-caller setup this actually requires.
+  Captures the first-30-minute SPY high/low as the opening range; requires
+  2 CONSECUTIVE completed 5-minute bars to close beyond that range before
+  triggering (no single-bar fakeouts) — a confirmed break above triggers a
+  live BUY of a same-day (0DTE) CALL, a confirmed break below triggers a
+  live BUY of a same-day PUT — on whichever of SPY/SPX fits a $400 budget
+  (SPY by default). Previous day's high/low is shown as context only, not
+  part of the trigger. One trade per day, single lot (no tiering) — entry
+  BUY plus ONE real STOP order at -30%, no take-profit order and no
+  bot-managed forced close; Jeff exits manually intraday whenever he
+  chooses (revised 9/22/26 — see § Exit Rule). Every trading day (trade or
+  no trade) gets logged as a chat message at the end of the day's last run
+  (revised 9/22/26 — Google Drive isn't reliably available in this
+  session, so nothing is auto-written to any doc; Jeff copies the printed
+  entry into his own log himself). This is NOT the old 16-ticker
+  5-strategy swing matrix — that content was removed from this skill
+  entirely (it belonged to a different context). ALWAYS trigger on: "run
+  the ORB breakout check", "check opening range", "SPY breakout", "opening
+  range breakout", "run the breakout scan", "check for a breakout", "run
+  the weekly review", "ORB weekly review", "how's the breakout strategy
+  doing", or any request about this SPY/SPX 0DTE strategy. Runs on a
+  5-minute cadence during market hours (from 10:10 AM ET) on weekdays,
+  plus one weekly review run.
 ---
 
 # Public Trader Skill — Opening Range Breakout (0DTE)
@@ -58,14 +61,18 @@ does not affect the trigger.
 
 ## Schedule
 
-Runs **once per day, weekdays, 10:10 AM ET (9:10 AM CT)**, skipping US
-market holidays (revised 9/22/26 — this routine's Schedule trigger has a
-1-hour minimum interval, so 5-minute intraday polling isn't possible; a
-single check right after the earliest the 2-bar confirmation can fire is
-the workable design instead). See `references/schedule-setup.md` for the
-trigger setup — Jeff needs to set the routine's own Schedule trigger to
-10:10 AM ET / 9:10 AM CT himself; this skill can't change that from
-inside a run.
+Runs **every 5 minutes, weekdays, 9:10 AM–2:45 PM CT** (10:10 AM–3:45 PM
+ET), skipping US market holidays — aligned to each 5-min bar close since
+the 2-bar confirmation rule needs to see every bar (revised 9/22/26: start
+time moved from 10:00 AM ET to 10:10 AM ET; polling itself stays — Jeff
+confirmed he wants continuous intraday checks, not a single daily run).
+
+**Platform note:** a native cloud-routine Schedule trigger has a 1-hour
+minimum interval — it can't fire every 5 minutes by itself. See
+`references/schedule-setup.md` for the API-trigger + external 5-minute
+caller this actually needs; Jeff needs to set that up (or tell me how he
+wants it set up), this skill can't create standing external infrastructure
+from inside a run.
 
 **Run label:** Always open output with:
 `🎯 ORB CHECK — [date] [time] CT`
@@ -75,12 +82,12 @@ inside a run.
 ## Overview
 
 ```
-Step 1 — Capture the opening range: SPY 9:30-10:00 AM ET high/low
-Step 2 — Fetch previous day's SPY high/low (context only)
+Step 1 — (First run of the day only, 9:10 AM CT) Capture the opening range:
+         SPY 9:30-10:00 AM ET high/low
+Step 2 — Fetch previous day's SPY high/low (context only, every run)
 Step 3 — Check for an existing position/order from today (one-trade-per-day gate)
-Step 4 — Fetch the last 2 completed 5-min SPY bars (10:00-10:05 and
-         10:05-10:10 ET, at this run time), check for 2-bar confirmed
-         breakout beyond the opening range
+Step 4 — Fetch the last 2 completed 5-min SPY bars, check for 2-bar
+         confirmed breakout beyond the opening range
 Step 5 — If breakout: project a realistic SPY target for the rest of the
          day (measured move vs IV expected move, more conservative wins),
          select SPY vs SPX (budget fit), pick 0DTE strike bounded by that
@@ -89,8 +96,10 @@ Step 6 — Submit BUY (live), then submit ONE real STOP order at -30% of
          entry premium. No take-profit order, no lot splitting. Jeff
          exits manually whenever he chooses.
 Step 7 — Print the day's outcome as a chat message Jeff can copy into his
-         own log (full entry if a trade happened, one-liner if not) —
-         see references/trade-log.md. Nothing is auto-written to Drive.
+         own log, once per day: the full entry on the run a trade fires,
+         or the one-liner on the final (2:45 PM CT) run if no trade
+         happened — see references/trade-log.md. Nothing auto-writes to
+         Drive.
 Step 8 — Display run summary
 ```
 
@@ -104,14 +113,15 @@ review process (see § Weekly Review below for the review workflow itself).
 
 ---
 
-## Step 1 — Capture Opening Range
+## Step 1 — Capture Opening Range (9:10 AM CT run only)
 
 Fetch SPY 5-min bars for 9:30–10:00 AM ET. Prefer `Twelve Data:get_time_series`
 if that connector is enabled in the session; otherwise use
 `Public:get_price_history(symbol="SPY", period="DAY", aggregation="FIVE_MINUTES",
 trading_session_toggle="REGULAR_HOURS")` and take the bars in that window —
 it returns the same OHLCV shape. OR_high = max high, OR_low = min low
-across that window.
+across that window. Store for reuse by every later run that day — don't
+recompute.
 
 ## Step 2 — Previous Day Context
 
@@ -125,8 +135,9 @@ Public:get_portfolio(account_id="5OI27877")
 Public:get_orders(account_id="5OI27877")
 ```
 If a same-day SPY/SPX option position or pending order from this strategy
-already exists, skip Steps 4-6 for this run — one trade per day, and Jeff
-manages the exit himself, so there's nothing else for this run to do.
+already exists, skip Steps 4-6 for this run (still do Step 7 if it's the
+2:45 PM CT run) — one trade per day, and Jeff manages the exit himself, so
+there's nothing else for a mid-day run to do once a trade has fired.
 
 ## Step 4 — Breakout Check (2-bar confirmation)
 
@@ -161,16 +172,21 @@ Submission Sequence. Every call here is a real fill — no approval step.
 No custom alert needed here: Public's own order-fill notifications cover
 every leg automatically (see § Exit Alerts in that file).
 
-## Step 7 — Log the Day's Outcome (in chat)
+## Step 7 — Log the Day's Outcome (in chat, printed once)
 
-Print the entry as a chat message at the end of this run — do NOT write
-to Google Drive or any file; Jeff copies it into his own log at the end
-of each day:
-- **Trade day:** full entry — opening range, confirmation bars, entry
-  rationale, the stop order placed, and honest rationale for the pick
-- **No-trade day:** one-line entry — opening range and final status
+Print the entry as a chat message — do NOT write to Google Drive or any
+file; Jeff copies it into his own log at the end of each day:
+- **Trade day:** print the full entry on THIS run, the one where the
+  trade just fired — right after the BUY and STOP are confirmed. Entry
+  details (delta, fill price) are only freshly known right now, so don't
+  wait for 2:45 PM CT to print it.
+- **No-trade day:** print the one-line entry only on the final run of the
+  day (2:45 PM CT) — that's the first point "no breakout all day" is
+  actually final; mid-day runs just report their per-run status (Step 8),
+  no log entry yet.
 
-See `references/trade-log.md` for the exact template.
+Either way, the log entry gets printed exactly once per day. See
+`references/trade-log.md` for the exact template.
 
 ## Step 8 — Display Summary
 

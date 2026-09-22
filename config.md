@@ -145,15 +145,23 @@ in every run's summary if a position is still open: SPY 0DTE is
 physical-settlement, so an unclosed position expiring ITM/OTM matters —
 that risk is now Jeff's to manage, not the bot's.
 
-## Schedule (revised 9/22/26)
-- **10:10 AM ET (9:10 AM CT), once per day, weekdays:** capture the
-  opening range (30-min high/low), fetch previous day H/L for context,
-  and run the ONE breakout check for the day — using the 10:00-10:05 and
-  10:05-10:10 ET bars, the earliest pair that can satisfy 2-bar
-  confirmation. This is a single run, not 5-minute polling — the cloud
-  routine's Schedule trigger has a 1-hour minimum interval, so continuous
-  intraday polling isn't available. A breakout that confirms later in the
-  day (after 10:10 AM ET) will not be caught by this design.
+## Schedule (revised 9/22/26 — start time moved, polling itself kept)
+- **9:10 AM CT (10:10 AM ET):** capture opening range (30-min high/low),
+  fetch previous day H/L for context, run the first breakout check
+  immediately using whatever 5-min bars have already closed by then (at
+  minimum the 10:00-10:05 and 10:05-10:10 ET bars, the earliest pair that
+  can satisfy 2-bar confirmation).
+- **Every 5 minutes from 9:10 AM CT through 2:45 PM CT:** breakout check,
+  aligned to each new 5-min bar close (skipped once a trade has already
+  been taken today).
+- **2:45 PM CT:** final run of the day — no forced close (Jeff exits
+  manually), but this is when the day's chat-log entry gets printed (see
+  `references/trade-log.md`).
+
+**Platform note:** a native cloud-routine Schedule trigger has a 1-hour
+minimum interval and cannot fire every 5 minutes on its own — see
+`references/schedule-setup.md` for the API-trigger + external 5-minute
+caller this actually needs.
 
 ## Budget Warning
 0DTE SPY ATM premiums typically run $150–$400 depending on realized

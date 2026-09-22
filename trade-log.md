@@ -3,10 +3,11 @@
 ## Log Storage: printed in chat (revised 9/22/26)
 Google Drive isn't reliably available in this session, and Jeff would
 rather manage his own copy anyway. Nothing is auto-written to any file or
-doc. Instead, the run prints the day's entry (below) as a chat message at
-the end of every run — trade day or no-trade day — and Jeff copies it into
-his own log at the end of each day himself. This is not optional: every
-run still ends with an entry printed, even on a no-trade day, so there's a
+doc. Instead, exactly one run per day prints the day's entry (below) as a
+chat message — the run the trade fires on, on a trade day, or the final
+(2:45 PM CT) run, on a no-trade day — and Jeff copies it into his own log
+himself. This is not optional: every trading day gets an entry printed
+somewhere in that day's runs, even on a no-trade day, so there's a
 plain-text record Jeff can paste, even if he doesn't do it every single
 day.
 
@@ -22,11 +23,11 @@ breakout even confirms vs. how many days go by with nothing).
 Opening Range: $[OR_low]-$[OR_high] | Final status: [NO BREAKOUT all day / WATCHING seen but never confirmed at HH:MM]
 ```
 
-### Trade day (full entry) — print this at the end of the run, right after
-the entry (and stop order) are confirmed filled/resting. There's no later
-run that day to record an exit outcome (see § Log Storage above), so this
-entry covers entry only — Jeff appends the exit himself when he closes the
-position:
+### Trade day (full entry) — print this on the run where the trade fires,
+right after the entry (and stop order) are confirmed filled/resting. Even
+though polling continues afterward, later runs won't re-print this (§ Log
+Storage above) — this entry covers entry only; Jeff appends the exit
+himself when he closes the position:
 
 ```
 ## [YYYY-MM-DD] — [BULLISH BREAKOUT / BEARISH BREAKDOWN]

@@ -5,7 +5,7 @@ content belonged to a different skill/conversation and has been removed.
 
 ---
 
-## Step 1 — Capture the Opening Range (once per day, first run at 9:00 AM CT)
+## Step 1 — Capture the Opening Range (once per day, first run at 9:10 AM CT)
 
 ```
 Fetch SPY intraday bars for 9:30–10:00 AM ET (8:30–9:00 AM CT) via
@@ -39,8 +39,8 @@ Public:get_orders(account_id="5OI27877")
 ```
 If either shows an open SPY/SPX option position or pending order opened
 today by this strategy → SKIP the rest of this run (one trade per day).
-Still perform the 2:45 PM CT forced-close check regardless (see
-public-submission.md § End-of-Day Close).
+Still print the day's log entry if this is the 2:45 PM CT run (see Step 8
+below) — there's no forced-close check anymore, Jeff exits manually.
 
 ## Step 4 — Breakout Trigger (2-bar confirmation on the 5-minute chart)
 
@@ -115,21 +115,25 @@ lot, no tiering. Once filled, submit ONE `order_type="STOP"` SELL at -30%
 of the entry premium for quantity N. No take-profit order. See
 `references/public-submission.md` § ORB Submission Sequence.
 
-## Step 8 — Print the Log Entry, No Forced Close
+## Step 8 — Print the Log Entry (once per day), No Forced Close
 
 No bot-managed end-of-day close — Jeff exits manually whenever he
 chooses. Print the trade-log entry (see `references/trade-log.md`) as a
-chat message so Jeff can copy it into his own record.
+chat message exactly once per day: on a trade day, print it on the same
+run the trade fires (entry details are freshest right then); on a
+no-trade day, print the one-liner only on the final run (2:45 PM CT),
+since that's the first point "no breakout all day" is final. Any other
+mid-day run just reports its per-run status (Output Format below), no log
+entry.
 
 ---
 
 ## Daily State to Track
 
 Each day is independent — no state carries from one day to the next except
-the day's own opening range and whether a trade has already fired (checked
-live via `get_portfolio`/`get_orders`, no separate state file needed).
-There's only one run per day now, so there's no mid-day state to persist
-across runs either.
+the day's own opening range (fixed once at 9:10 AM CT) and whether a trade
+has already fired (checked live via `get_portfolio`/`get_orders`, no
+separate state file needed).
 
 ## Output Format
 

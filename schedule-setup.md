@@ -1,26 +1,31 @@
-# Schedule Setup — Opening Range Breakout
+# Schedule Setup — Opening Range Breakout (5-minute polling, 2-bar confirmation)
 
-## Current live setup (revised 9/22/26): single daily check, cloud routine
+## Current live setup (revised 9/22/26): 5-minute polling starting at 10:10 AM ET
 
-**This strategy actually runs as a Claude Code cloud Routine named
-"Public ODTE Trader," on a native Schedule trigger.** That trigger type has
-a **1-hour minimum interval**, so the 5-minute intraday polling this file
-originally described (below, kept for reference/local-machine setups) was
-never really compatible with it — the routine can only fire once per
-market morning, not every 5 minutes.
+**This strategy runs as a Claude Code cloud Routine named "Public ODTE
+Trader."** Jeff confirmed on 9/22/26 that he wants intraday polling kept
+(not a single daily check) — only the start time moved, from 10:00 AM ET
+to **10:10 AM ET (9:10 AM CT)**, the earliest time the 2-bar confirmation
+rule can be evaluated (it needs the 10:00–10:05 and 10:05–10:10 ET bars,
+both complete).
 
-**Set the routine's Schedule trigger to 10:10 AM ET (9:10 AM CT), weekdays.**
-This is the earliest time the 2-bar confirmation rule can even be
-evaluated (it needs the 10:00–10:05 and 10:05–10:10 ET bars, both
-complete). A breakout that confirms later than 10:10 AM ET will not be
-caught — this is a known, accepted limitation of the single-run design,
-traded off against not being able to poll every 5 minutes anyway.
+**Platform constraint: a native Schedule trigger has a 1-hour minimum
+interval** — it cannot fire every 5 minutes by itself. To get real 5-minute
+polling on a cloud routine, use the routine's **API trigger** instead: it
+exposes a per-run HTTP endpoint with a bearer token, and an external
+5-minute caller (a cron-as-a-service, or a local machine's launchd/Task
+Scheduler hitting that endpoint — see below for both local setups) invokes
+it instead of the routine firing itself on a schedule. **Jeff needs to set
+this up (switch the routine to an API trigger, and point some external
+5-minute caller at it) — a skill run can't create standing external
+infrastructure or change its own routine's trigger type from inside a
+run.** Tell me if you want help picking/wiring the external caller.
 
-Jeff needs to set/verify this trigger time himself in the routine's own
-settings (claude.ai/code/routines) — a skill run can't change its own
-routine's trigger from inside a run.
+The Weekly Review is unaffected — once a week is well above the 1-hour
+floor, so it can keep using a native Schedule trigger directly.
 
-To match, the strategy itself changed too (see `SKILL.md` and
+To match the account's real order-placement limits found in the first live
+trade, the strategy's exit design also changed (see `SKILL.md` and
 `config.md` § Exit Rule): single lot, one real STOP order at -30%, no
 take-profit order, no bot-managed end-of-day close — Jeff exits manually.
 Logging also moved from a Google Doc to a chat message Jeff copies
@@ -28,19 +33,6 @@ himself (`trade-log.md` § Log Storage) since Google Drive isn't reliably
 available in the routine's session.
 
 ---
-
-## Historical: 5-minute polling (retired, local-machine only)
-
-The sections below describe a **5-minute polling setup for a tiered
-TP/SL, bot-managed-EOD-close version of this strategy that has been
-retired** (see the revision notes in `config.md`, `signal-logic.md`, and
-`public-submission.md`, all dated 9/22/26). They're kept only because they
-still work as a reference for running this kind of check-loop from a local
-Mac/Windows machine, where an every-5-minutes cron IS possible (unlike the
-cloud routine's 1-hour-minimum Schedule trigger) — if Jeff ever wants to
-resurrect the tiered/polling design locally instead of the single-daily
-cloud-routine design above, this is how. It does not reflect how the
-strategy runs today.
 
 This strategy requires 2 consecutive completed 5-minute bars to close beyond
 the opening range boundary before a trade fires. The schedule runs **every
@@ -51,14 +43,14 @@ confirmed signal by a full bar or more.
 
 | Time (CT) | Time (ET) | Purpose |
 |-----------|-----------|---------|
-| 9:00 AM | 10:00 AM | Capture opening range (30-min H/L) + prior-day context, run first breakout check |
-| 9:05 AM | 10:05 AM | Breakout check (2-bar confirmation) |
-| 9:10 AM | 10:10 AM | Breakout check |
+| 9:10 AM | 10:10 AM | Capture opening range (30-min H/L) + prior-day context, run first breakout check |
+| 9:15 AM | 10:15 AM | Breakout check (2-bar confirmation) |
+| 9:20 AM | 10:20 AM | Breakout check |
 | ... every 5 min ... | ... | Breakout check |
-| 2:45 PM | 3:45 PM | Final breakout check **+ forced end-of-day close** |
+| 2:45 PM | 3:45 PM | Final breakout check — no forced close (Jeff exits manually); this run prints the day's log entry if no trade fired earlier |
 
-That's **70 runs per day** between 9:00 AM and 2:45 PM CT, plus **1 weekly
-review run**. (Retired — see note above.)
+That's **68 runs per day** between 9:10 AM and 2:45 PM CT, plus **1 weekly
+review run**.
 
 ## Weekly Review Schedule
 
@@ -184,8 +176,6 @@ chmod +x ~/orb-breakout-run.sh
   </array>
   <key>StartCalendarInterval</key>
   <array>
-    <dict><key>Hour</key><integer>9</integer><key>Minute</key><integer>0</integer></dict>
-    <dict><key>Hour</key><integer>9</integer><key>Minute</key><integer>5</integer></dict>
     <dict><key>Hour</key><integer>9</integer><key>Minute</key><integer>10</integer></dict>
     <dict><key>Hour</key><integer>9</integer><key>Minute</key><integer>15</integer></dict>
     <dict><key>Hour</key><integer>9</integer><key>Minute</key><integer>20</integer></dict>
@@ -270,11 +260,11 @@ launchctl load ~/Library/LaunchAgents/com.jeff.orb-breakout.plist
 launchctl list | grep orb-breakout
 ```
 
-**Note on load:** 70 calendar-interval entries firing `claude -p` every 5
-minutes for ~5.75 hours is a lot of process spin-up overhead. If that proves
+**Note on load:** 68 calendar-interval entries firing `claude -p` every 5
+minutes for ~5.6 hours is a lot of process spin-up overhead. If that proves
 too heavy in practice (API costs, launchd reliability, overlapping runs if
 one invocation takes >5 min to finish), consider switching to a single
-long-running process with an internal sleep loop instead of 70 separate
+long-running process with an internal sleep loop instead of 68 separate
 launchd triggers — flag it if you hit that wall and I'll rework this.
 
 ### Retiring an old public-trader schedule
@@ -292,7 +282,7 @@ rm -f ~/Library/LaunchAgents/com.jeff.public-trader-close.plist
 ## Windows — Task Scheduler (alternative)
 
 ```powershell
-schtasks /create /tn "ORB Breakout Check" /tr "claude -p 'run the ORB breakout check'" /sc minute /mo 5 /st 09:00 /et 14:45
+schtasks /create /tn "ORB Breakout Check" /tr "claude -p 'run the ORB breakout check'" /sc minute /mo 5 /st 09:10 /et 14:45
 ```
 Task Scheduler's `/sc minute /mo 5` runs every 5 minutes within the
 start/end window on the days configured in the GUI (weekday recurrence is
@@ -301,41 +291,66 @@ trigger type).
 
 ## Claude Code Routines (cloud) — this is the live setup
 
-Routines (claude.ai/code/routines) run this skill on Anthropic's cloud
-instead of a local Mac/Windows machine. This is how "Public ODTE Trader"
-actually runs today. Two cloud-specific constraints shaped the current
-design (see the revision notes throughout `SKILL.md` and its references,
-all dated 9/22/26):
+Routines (claude.ai/code/routines) run this skill on Anthropic's cloud.
+This is how "Public ODTE Trader" actually runs today, and Jeff confirmed
+on 9/22/26 that the routine's own Schedule-trigger UI refuses a 5-minute
+interval no matter how it's set — consistent with the 1-hour-minimum
+platform limit noted above. A native Schedule trigger literally cannot
+poll every 5 minutes; there is no setting that gets around this.
 
-- **A native Schedule trigger has a 1-hour minimum interval** — it cannot
-  run 5-minute intraday polling. Rather than route around that with an
-  external cron hitting an API trigger, the strategy itself was
-  simplified to a **single daily check** at 10:10 AM ET (9:10 AM CT) —
-  the earliest the 2-bar confirmation can fire — using the native Schedule
-  trigger directly, with a single stop-loss order and manual exits instead
-  of a bot-managed intraday exit loop.
-- **No persistent local filesystem between runs, and Google Drive isn't
-  reliably enabled in the routine's session** — so the trade log is no
-  longer auto-written anywhere. Each run prints its log entry in chat
-  (see `references/trade-log.md` § Log Storage) and Jeff copies it into
-  his own record at the end of the day.
+**The fix: switch the routine to an API trigger, and have something
+external call it every 5 minutes.**
 
-Set up as **two separate routines**:
-1. **Public ODTE Trader** (a.k.a. "ORB Check") — trigger: Schedule, 10:10
-   AM ET (9:10 AM CT), weekdays. Connect a repo containing this
-   `public-trader/` folder; instructions tell Claude to read `SKILL.md`
-   and everything under `references/` from that repo and follow it for
-   the run.
-2. **Weekly Review** — trigger: Schedule, first trading day of the week,
-   8:00 AM CT. Same repo connection; instructions point at
-   `references/trade-log.md` § Weekly Review instead, and should include
-   the week's chat-logged entries (or ask Jeff for them) since there's no
-   Doc to read automatically anymore.
+1. In the routine's settings (claude.ai/code/routines → "Public ODTE
+   Trader"), change the trigger type from Schedule to **API trigger**.
+   This generates a per-run HTTPS endpoint plus a bearer token, and
+   usually shows a sample `curl` call — paste that sample here so the
+   exact request shape (headers/method/body) can be wired up correctly.
+2. **Recommended external caller: a GitHub Actions scheduled workflow in
+   this repo** (`jeffongeri-hash/Public-Trader`), since it's already
+   connected and needs no new service signup:
+   ```yaml
+   # .github/workflows/orb-poll.yml
+   name: ORB breakout poll
+   on:
+     schedule:
+       - cron: '10-45/5 14 * * 1-5'   # 9:10-2:45 CT = 14:10-19:45 UTC (CDT); adjust for standard time
+   jobs:
+     poll:
+       runs-on: ubuntu-latest
+       steps:
+         - run: |
+             curl -s -X POST "$ROUTINE_ENDPOINT" \
+               -H "Authorization: Bearer $ROUTINE_TOKEN"
+           env:
+             ROUTINE_ENDPOINT: ${{ secrets.ORB_ROUTINE_ENDPOINT }}
+             ROUTINE_TOKEN: ${{ secrets.ORB_ROUTINE_TOKEN }}
+   ```
+   Store the endpoint URL and bearer token as **repo secrets** (Settings →
+   Secrets and variables → Actions) — never commit the token in plaintext,
+   since it can place real trades. GitHub Actions cron is known to fire a
+   few minutes late under load; that's tolerable here since every run
+   re-derives the breakout from the two most recently *completed* bars
+   rather than assuming which exact 5-minute slot it's in — a late run
+   just detects a confirmed breakout a few minutes after it happened, it
+   doesn't miscompute it. A local machine's launchd/Task Scheduler (below)
+   is the more precisely-timed alternative if Jeff has one he can leave on
+   during market hours instead.
+3. The CDT/CST cron offset above will drift twice a year at DST
+   transitions — flag it and it can be split into two cron lines (one for
+   each UTC offset) if that matters.
+
+The Weekly Review is unaffected by any of this — once a week is well
+above the 1-hour floor, so it can keep its own native Schedule trigger.
+
+Once Jeff has the API trigger's endpoint + token, paste them (or just the
+sample curl command) here and the workflow file above can be finalized and
+committed for real, plus the repo secrets can be named precisely.
 
 Connectors needed: **Public** (trading) at minimum. **Twelve Data** is
 preferred for 5-min bars but optional — `Public:get_price_history` is a
 working fallback if Twelve Data isn't enabled in the session (see
-`references/public-submission.md`). Google Drive is no longer required by
-either routine. No Notifications tab setup is needed for exit alerts —
-Public itself sends order-fill notifications for every order (entry, stop)
-automatically; see `references/public-submission.md` § Exit Alerts.
+`references/public-submission.md`). Google Drive is no longer required.
+No Notifications tab setup is needed for exit alerts — Public itself sends
+order-fill notifications for every order (entry, stop) automatically; see
+`references/public-submission.md` § Exit Alerts.
