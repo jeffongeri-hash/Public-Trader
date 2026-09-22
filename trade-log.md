@@ -1,23 +1,14 @@
 # Trade Log & Weekly Review Reference
 
-## Log Storage: Google Drive (not a local file)
-The trade log lives in a **Google Doc**, not `~/orb-trade-log.md` on any
-particular machine — this strategy may run from a local Mac (launchd) or
-from a Claude Code cloud Routine with no persistent local filesystem
-between runs, so the log needs to live somewhere both can reach.
-
-**Doc name:** `ORB Trade Log` (create it once via `Google_Drive__create_file`
-if it doesn't already exist; search for it by name first via
-`Google_Drive__search_files` before assuming it's missing).
-
-**Write pattern (read-modify-write, since Drive has no true append):**
-1. `Google_Drive__read_file_content` on the doc to get current contents
-2. Append the new entry's markdown text to the end
-3. `Google_Drive__update_file` with the full updated content
-
-This happens automatically as part of every day's 2:45 PM CT run — logging
-is not optional or a "remember to do this later" step. Every trading day
-gets an entry written to the Doc before that run's summary is displayed.
+## Log Storage: printed in chat (revised 9/22/26)
+Google Drive isn't reliably available in this session, and Jeff would
+rather manage his own copy anyway. Nothing is auto-written to any file or
+doc. Instead, the run prints the day's entry (below) as a chat message at
+the end of every run — trade day or no-trade day — and Jeff copies it into
+his own log at the end of each day himself. This is not optional: every
+run still ends with an entry printed, even on a no-trade day, so there's a
+plain-text record Jeff can paste, even if he doesn't do it every single
+day.
 
 ## What Gets Logged
 
@@ -31,9 +22,11 @@ breakout even confirms vs. how many days go by with nothing).
 Opening Range: $[OR_low]-$[OR_high] | Final status: [NO BREAKOUT all day / WATCHING seen but never confirmed at HH:MM]
 ```
 
-### Trade day (full entry) — write this the moment the position is CLOSED
-(both lots resolved, or forced EOD close), not at entry, so the log always
-contains the complete outcome, not a half-finished one:
+### Trade day (full entry) — print this at the end of the run, right after
+the entry (and stop order) are confirmed filled/resting. There's no later
+run that day to record an exit outcome (see § Log Storage above), so this
+entry covers entry only — Jeff appends the exit himself when he closes the
+position:
 
 ```
 ## [YYYY-MM-DD] — [BULLISH BREAKOUT / BEARISH BREAKDOWN]
@@ -51,36 +44,17 @@ contains the complete outcome, not a half-finished one:
 - Entry fill: $[premium] x [N] = $[total cost]
 - Rationale: [why this was/wasn't a well-timed entry given where price was relative to the range, any notable context like VIX level or overall day trend if visible from the bars]
 
-**Exit — Lot A ([tier1_qty] ct, target +25%/-30%):**
-- Outcome: [TP-A HIT / SL-A HIT / EOD FORCED CLOSE]
-- Exit price: $[price] at [HH:MM]
-- P&L (Lot A): $[gain/loss] ([+/-X]% on premium)
+**Stop order placed:** SELL [N] ct STOP @ $[stop_price] (-30% of entry). No take-profit order.
 
-**Exit — Lot B ([tier2_qty] ct, target +40%/-30% — omit this block if N=1):**
-- Outcome: [TP-B HIT / SL-B HIT / EOD FORCED CLOSE]
-- Exit price: $[price] at [HH:MM]
-- P&L (Lot B): $[gain/loss] ([+/-X]% on premium)
+**Exit:** [Jeff to fill in when he closes the position — price, time, P&L, and whether the stop triggered or he exited manually]
 
-**Blended outcome:**
-- Total time held: entry [HH:MM] to final exit [HH:MM]
-- Total P&L: $[sum of both lots] ([+/-X]% on total cost)
-- Note explicitly if execution deviated from the planned tiered exit (e.g.
-  manual override, different split than ceil(N/2), scaled out differently)
-  — the weekly review needs to know when a trade doesn't actually test
-  the systematic rule.
-
-**Post-trade analysis:**
-[Honest assessment — did Lot A's closer +25% target actually get hit, or
-did premium fall short/overshoot straight past it? Did the runner (Lot B)
-benefit from riding toward +40%, or did giving it more room just give back
-gains that Lot A's exit had already locked in? Did the 2-bar confirmation
-help (avoided a fakeout) or hurt (gave up entry price waiting for
-confirmation) this specific trade? Was the SPY-vs-SPX budget choice the
-right call in hindsight? Did the projected target ($[projected_target])
-actually get reached, overshot, or fall short — and did bounding the
-strike to it help or cost anything relative to what an unbounded pick
-would've done? Anything about this trade that should inform the weekly
-review.]
+**Post-trade analysis (entry only — Jeff adds exit commentary himself):**
+[Honest assessment of the entry — did the 2-bar confirmation help (avoided
+a fakeout) or hurt (gave up entry price waiting for confirmation) this
+specific trade? Was the SPY-vs-SPX budget choice the right call in
+hindsight? Did the projected target ($[projected_target]) look realistic
+given where price already was at entry? Anything about this setup worth
+flagging for the weekly review.]
 ```
 
 Log every trade — winners and losers both get the full template. The point
@@ -98,36 +72,35 @@ whatever partial data exists for the current week and say so explicitly —
 don't wait silently for week-end.
 
 ### What It Reads
-The `ORB Trade Log` Google Doc, filtered to the review period (the prior
-Mon–Fri). If the doc is missing or has no entries for that week, say so
-and stop — don't fabricate a review from nothing.
+Since nothing auto-writes to Drive anymore (see § Log Storage), this reads
+whatever entries Jeff has pasted into this chat for the review period (the
+prior Mon–Fri) — not a Doc. If nothing is available for that week, say so
+and stop — don't fabricate a review from nothing. Exit outcomes (P&L, hold
+time, whether the stop triggered or Jeff exited manually) are only as
+complete as what Jeff filled in on each entry's `**Exit:**` line — flag
+any entry missing that.
 
 ### What It Computes
 ```
 - Total trading days in the week vs. days with a confirmed trade
   (trade frequency — is the setup rare or common?)
-- Win rate PER LOT: Lot A TP-A hits vs. SL-A hits vs. EOD closes, and the
-  same breakdown for Lot B — since they now have different targets (+25%
-  vs +40%), their hit rates should be tracked and reported separately, not
-  blended into one "win rate" number
+- Stop-out rate: how often the -30% stop triggered vs. Jeff exiting
+  manually vs. the position still being open when reviewed
 - CALL vs PUT split
 - SPY vs SPX split (how often did SPX actually get used, if ever)
-- Average P&L per trade (blended across both lots), and total P&L for the week
-- Average time held per trade
+- Average P&L per trade and total P&L for the week (only from entries with
+  an exit filled in)
+- Average time held per trade (only from entries with an exit filled in)
 - How many WATCHING events occurred but never confirmed (fakeout rate) —
   this is the key metric for whether the 2-bar confirmation is earning
   its keep or costing too much entry-price slippage
-- How often Lot A's +25% target is reached but Lot B's +40% target is NOT
-  (i.e., is the runner actually earning its keep, or is it consistently
-  giving back what Lot A already locked in?)
 - Projection accuracy: how often did SPY actually reach the projected_target
   logged at entry, and which method (measured move vs. IV expected move)
   tends to be the more conservative/accurate one in practice — this tells
   us whether the strike-bounding logic is calibrated correctly or too
   tight/loose
 - Any pattern across the "post-trade analysis" notes worth flagging
-  (e.g., "SL hit disproportionately on PUT trades", "Lot B rarely reaches
-  +40% and usually round-trips to its stop instead")
+  (e.g., "the -30% stop triggers disproportionately on PUT trades")
 ```
 A single week is a small sample (at most 5 trading days) — say so plainly
 rather than drawing strong conclusions from 1-2 trades. Treat early weekly
@@ -139,7 +112,7 @@ usually isn't.
 End with an explicit, opinionated recommendation — not just numbers:
 - **Keep as-is**, or
 - **Adjust a specific parameter** (confirmation bar count, budget, delta
-  target, TP/SL percentages, opening range window length) with the
+  target, stop-loss percentage, opening range window length) with the
   reasoning tied directly to what the week's data showed, or
 - **Something structural is off** (e.g., trade frequency too low to be
   worth running, or SPX is never actually usable given the budget so that
@@ -155,7 +128,7 @@ to re-derive the stats himself.
 ```
 📊 WEEKLY REVIEW — Week of [Mon date] - [Fri date]
 Trading days: [N] | Trades taken: [N] ([X]% of days)
-Win rate: [N] TP / [N] SL / [N] EOD close ([X]% win rate)
+Stop-outs: [N] | Manual exits: [N] | Still open / no exit logged: [N]
 CALL/PUT split: [N]/[N] | SPY/SPX split: [N]/[N]
 Total P&L: $[amount] | Avg per trade: $[amount] | Avg hold time: [X] min
 Fakeout rate (WATCHING → never confirmed): [N] of [N] watching events ([X]%)
@@ -163,5 +136,5 @@ Fakeout rate (WATCHING → never confirmed): [N] of [N] watching events ([X]%)
 Recommendation: [keep as-is / specific change / not enough data yet] — [reasoning]
 ```
 
-This weekly review is a SEPARATE run from the 5-minute intraday polling —
+This weekly review is a SEPARATE run from the daily 10:10 AM ET check —
 see `references/schedule-setup.md` for its own trigger.

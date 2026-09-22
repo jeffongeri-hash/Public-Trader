@@ -1,4 +1,46 @@
-# Schedule Setup — Opening Range Breakout (5-minute polling, 2-bar confirmation)
+# Schedule Setup — Opening Range Breakout
+
+## Current live setup (revised 9/22/26): single daily check, cloud routine
+
+**This strategy actually runs as a Claude Code cloud Routine named
+"Public ODTE Trader," on a native Schedule trigger.** That trigger type has
+a **1-hour minimum interval**, so the 5-minute intraday polling this file
+originally described (below, kept for reference/local-machine setups) was
+never really compatible with it — the routine can only fire once per
+market morning, not every 5 minutes.
+
+**Set the routine's Schedule trigger to 10:10 AM ET (9:10 AM CT), weekdays.**
+This is the earliest time the 2-bar confirmation rule can even be
+evaluated (it needs the 10:00–10:05 and 10:05–10:10 ET bars, both
+complete). A breakout that confirms later than 10:10 AM ET will not be
+caught — this is a known, accepted limitation of the single-run design,
+traded off against not being able to poll every 5 minutes anyway.
+
+Jeff needs to set/verify this trigger time himself in the routine's own
+settings (claude.ai/code/routines) — a skill run can't change its own
+routine's trigger from inside a run.
+
+To match, the strategy itself changed too (see `SKILL.md` and
+`config.md` § Exit Rule): single lot, one real STOP order at -30%, no
+take-profit order, no bot-managed end-of-day close — Jeff exits manually.
+Logging also moved from a Google Doc to a chat message Jeff copies
+himself (`trade-log.md` § Log Storage) since Google Drive isn't reliably
+available in the routine's session.
+
+---
+
+## Historical: 5-minute polling (retired, local-machine only)
+
+The sections below describe a **5-minute polling setup for a tiered
+TP/SL, bot-managed-EOD-close version of this strategy that has been
+retired** (see the revision notes in `config.md`, `signal-logic.md`, and
+`public-submission.md`, all dated 9/22/26). They're kept only because they
+still work as a reference for running this kind of check-loop from a local
+Mac/Windows machine, where an every-5-minutes cron IS possible (unlike the
+cloud routine's 1-hour-minimum Schedule trigger) — if Jeff ever wants to
+resurrect the tiered/polling design locally instead of the single-daily
+cloud-routine design above, this is how. It does not reflect how the
+strategy runs today.
 
 This strategy requires 2 consecutive completed 5-minute bars to close beyond
 the opening range boundary before a trade fires. The schedule runs **every
@@ -16,7 +58,7 @@ confirmed signal by a full bar or more.
 | 2:45 PM | 3:45 PM | Final breakout check **+ forced end-of-day close** |
 
 That's **70 runs per day** between 9:00 AM and 2:45 PM CT, plus **1 weekly
-review run**.
+review run**. (Retired — see note above.)
 
 ## Weekly Review Schedule
 
@@ -257,38 +299,43 @@ start/end window on the days configured in the GUI (weekday recurrence is
 easier to set via the Task Scheduler GUI than the command line for this
 trigger type).
 
-## Alternative: Claude Code Routines (cloud, no laptop dependency)
+## Claude Code Routines (cloud) — this is the live setup
 
-Routines (claude.ai/code/routines, research preview) run this skill on
-Anthropic's cloud instead of a local Mac/Windows machine. Two constraints
-change the setup:
+Routines (claude.ai/code/routines) run this skill on Anthropic's cloud
+instead of a local Mac/Windows machine. This is how "Public ODTE Trader"
+actually runs today. Two cloud-specific constraints shaped the current
+design (see the revision notes throughout `SKILL.md` and its references,
+all dated 9/22/26):
 
 - **A native Schedule trigger has a 1-hour minimum interval** — it cannot
-  run the 5-minute intraday breakout check directly. Use the routine's
-  **API trigger** instead: it exposes a per-run HTTP endpoint with a
-  bearer token, and an external 5-minute cron (still your local launchd,
-  or any cron-as-a-service) calls that endpoint instead of running
-  `claude -p` directly. The weekly review's cadence (once a week) is well
-  above the 1-hour floor, so it can use the native Schedule trigger as-is.
-- **No persistent local filesystem between runs** — this is exactly why
-  the trade log lives in a Google Doc (see `references/trade-log.md`)
-  rather than `~/orb-trade-log.md`: a cloud routine has nowhere durable to
-  keep a local file across separate invocations, but Drive persists fine.
+  run 5-minute intraday polling. Rather than route around that with an
+  external cron hitting an API trigger, the strategy itself was
+  simplified to a **single daily check** at 10:10 AM ET (9:10 AM CT) —
+  the earliest the 2-bar confirmation can fire — using the native Schedule
+  trigger directly, with a single stop-loss order and manual exits instead
+  of a bot-managed intraday exit loop.
+- **No persistent local filesystem between runs, and Google Drive isn't
+  reliably enabled in the routine's session** — so the trade log is no
+  longer auto-written anywhere. Each run prints its log entry in chat
+  (see `references/trade-log.md` § Log Storage) and Jeff copies it into
+  his own record at the end of the day.
 
 Set up as **two separate routines**:
-1. **ORB Check** — trigger: API. Connect a repo containing this
+1. **Public ODTE Trader** (a.k.a. "ORB Check") — trigger: Schedule, 10:10
+   AM ET (9:10 AM CT), weekdays. Connect a repo containing this
    `public-trader/` folder; instructions tell Claude to read `SKILL.md`
    and everything under `references/` from that repo and follow it for
-   the run. An external 5-minute cron calls the routine's endpoint during
-   market hours.
+   the run.
 2. **Weekly Review** — trigger: Schedule, first trading day of the week,
    8:00 AM CT. Same repo connection; instructions point at
-   `references/trade-log.md` § Weekly Review instead.
+   `references/trade-log.md` § Weekly Review instead, and should include
+   the week's chat-logged entries (or ask Jeff for them) since there's no
+   Doc to read automatically anymore.
 
-Connectors needed on both: **Public** (trading) and **Twelve Data** (5-min
-bars) at minimum; the weekly review additionally needs **Google Drive**
-(reading the trade log) — the ORB Check routine needs it too, since it
-writes the daily log entry as part of Step 8. No Notifications tab setup
-is needed for exit alerts — Public itself sends order-fill notifications
-for every leg (entry, TP, SL) automatically; see
-`references/public-submission.md` § Exit Alerts.
+Connectors needed: **Public** (trading) at minimum. **Twelve Data** is
+preferred for 5-min bars but optional — `Public:get_price_history` is a
+working fallback if Twelve Data isn't enabled in the session (see
+`references/public-submission.md`). Google Drive is no longer required by
+either routine. No Notifications tab setup is needed for exit alerts —
+Public itself sends order-fill notifications for every order (entry, stop)
+automatically; see `references/public-submission.md` § Exit Alerts.

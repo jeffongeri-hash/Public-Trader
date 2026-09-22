@@ -2,32 +2,33 @@
 name: public-trader
 description: >
   Live Opening Range Breakout (ORB) 0DTE options strategy on SPY, executing
-  through the Public.com connector, account 5OI27877 (CASH). Runs every 5
-  minutes on weekdays from 9:00 AM to 2:45 PM CT (10:00 AM-3:45 PM ET) to
-  align with 5-minute bar closes. Captures the first-30-minute SPY high/low
-  as the opening range; requires 2 CONSECUTIVE completed 5-minute bars to
-  close beyond that range before triggering (no single-bar fakeouts) — a
-  confirmed break above triggers a live BUY of a same-day (0DTE) CALL, a
-  confirmed break below triggers a live BUY of a same-day PUT — on
-  whichever of SPY/SPX fits a $400 budget (SPY by default). Previous day's
-  high/low is shown as context only, not part of the trigger. One trade
-  per day; tiered exit — Lot A (~half the contracts) at +25%/-30%, Lot B
-  (runner, remainder) at +40%/-30% — forced end-of-day close
-  at 2:45 PM CT to avoid holding into physical-settlement expiration.
-  Every trading day (trade or no trade) gets logged to a Google Doc named
-  "ORB Trade Log" (via the Google Drive connector — read-modify-write, no
-  local filesystem dependency) with full entry/exit rationale and
-  post-trade analysis; a separate WEEKLY REVIEW run (first trading day of
-  each week) reads that log and recommends whether to keep the strategy
-  as-is or adjust it. This is NOT the old 16-ticker 5-strategy swing
+  through the Public.com connector, account 5OI27877 (CASH). Runs ONCE per
+  day on weekdays at 10:10 AM ET (9:10 AM CT) — a single check, not 5-minute
+  polling (revised 9/22/26: the cloud routine's native Schedule trigger has
+  a 1-hour minimum interval, so continuous intraday polling isn't possible;
+  10:10 AM ET is the earliest time the 2-bar confirmation (using the
+  10:00-10:05 and 10:05-10:10 ET bars) can even be evaluated). Captures the
+  first-30-minute SPY high/low as the opening range; requires 2 CONSECUTIVE
+  completed 5-minute bars to close beyond that range before triggering (no
+  single-bar fakeouts) — a confirmed break above triggers a live BUY of a
+  same-day (0DTE) CALL, a confirmed break below triggers a live BUY of a
+  same-day PUT — on whichever of SPY/SPX fits a $400 budget (SPY by
+  default). Previous day's high/low is shown as context only, not part of
+  the trigger. One trade per day, single lot (no tiering) — entry BUY plus
+  ONE real STOP order at -30%, no take-profit order and no bot-managed
+  forced close; Jeff exits manually intraday whenever he chooses (revised
+  9/22/26 — see § Exit Rule). Every trading day (trade or no trade) gets
+  logged as a chat message in this session's own reply (revised 9/22/26 —
+  Google Drive isn't reliably available in this session, so nothing is
+  auto-written to any doc; Jeff copies the printed entry into his own log
+  at the end of each day). This is NOT the old 16-ticker 5-strategy swing
   matrix — that content was removed from this skill entirely (it belonged
   to a different context). ALWAYS trigger on: "run the ORB breakout
   check", "check opening range", "SPY breakout", "opening range
   breakout", "run the breakout scan", "check for a breakout", "run the
   weekly review", "ORB weekly review", "how's the breakout strategy
-  doing", or any request about this SPY/SPX 0DTE strategy. Runs on a
-  5-minute cadence during market hours on weekdays, plus one weekly
-  review run.
+  doing", or any request about this SPY/SPX 0DTE strategy. Runs once a
+  day at 10:10 AM ET on weekdays, plus one weekly review run.
 ---
 
 # Public Trader Skill — Opening Range Breakout (0DTE)
@@ -48,19 +49,23 @@ to close above that high (or below that low) before treating it as a
 confirmed breakout — a single bar poking beyond the range doesn't count.
 On confirmation, buy a same-day CALL (bullish) or PUT (bearish). Trade
 whichever of SPY or SPX options fits a $400 budget (SPY by default — SPX
-rarely fits). One trade per day. Exit is tiered: roughly half the
-contracts (Lot A) target +25%, the rest (Lot B, the runner) target +40% —
-both lots stop out at -30% — or force-close
-by 2:45 PM CT if neither has hit. Previous day's high/low is shown for
-context only — it does not affect the trigger.
+rarely fits). One trade per day, one lot, no tiering. Exit: a single real
+STOP order at -30% of entry premium is placed right after entry — no
+take-profit order, no bot-managed close. Jeff watches the position and
+closes it himself whenever he decides to (target, fading premium, end of
+day — his call). Previous day's high/low is shown for context only — it
+does not affect the trigger.
 
 ## Schedule
 
-Runs **every 5 minutes, weekdays, 9:00 AM–2:45 PM CT** (10:00 AM–3:45 PM
-ET), skipping US market holidays — aligned to each 5-min bar close since
-the 2-bar confirmation rule needs to see every bar. See
-`references/schedule-setup.md` for the full launchd setup (70 runs/day;
-this replaces any prior schedule entirely — it doesn't run alongside one).
+Runs **once per day, weekdays, 10:10 AM ET (9:10 AM CT)**, skipping US
+market holidays (revised 9/22/26 — this routine's Schedule trigger has a
+1-hour minimum interval, so 5-minute intraday polling isn't possible; a
+single check right after the earliest the 2-bar confirmation can fire is
+the workable design instead). See `references/schedule-setup.md` for the
+trigger setup — Jeff needs to set the routine's own Schedule trigger to
+10:10 AM ET / 9:10 AM CT himself; this skill can't change that from
+inside a run.
 
 **Run label:** Always open output with:
 `🎯 ORB CHECK — [date] [time] CT`
@@ -70,25 +75,23 @@ this replaces any prior schedule entirely — it doesn't run alongside one).
 ## Overview
 
 ```
-Step 1 — (First run of the day only, 9:00 AM CT) Capture the opening range:
-         SPY 9:30-10:00 AM ET high/low
-Step 2 — Fetch previous day's SPY high/low (context only, every run)
+Step 1 — Capture the opening range: SPY 9:30-10:00 AM ET high/low
+Step 2 — Fetch previous day's SPY high/low (context only)
 Step 3 — Check for an existing position/order from today (one-trade-per-day gate)
-Step 4 — Fetch the last 2 completed 5-min SPY bars, check for 2-bar
-         confirmed breakout beyond the opening range
+Step 4 — Fetch the last 2 completed 5-min SPY bars (10:00-10:05 and
+         10:05-10:10 ET, at this run time), check for 2-bar confirmed
+         breakout beyond the opening range
 Step 5 — If breakout: project a realistic SPY target for the rest of the
          day (measured move vs IV expected move, more conservative wins),
          select SPY vs SPX (budget fit), pick 0DTE strike bounded by that
          target (delta >= 0.40), size contracts to $400 budget
-Step 6 — Submit BUY (live), split into Lot A/Lot B, submit each lot's own
-         TP/SL pair (Lot A +25%/-30%, Lot B +40%/-30%) as unlinked
-         SELL LIMIT DAY orders
-Step 7 — (Final run of the day, 2:45 PM CT only) Force-close any position
-         still open
-Step 8 — Log the day's outcome to the "ORB Trade Log" Google Doc via the
-         Google Drive connector (full entry if a trade happened,
-         one-liner if not) — see references/trade-log.md
-Step 9 — Display run summary
+Step 6 — Submit BUY (live), then submit ONE real STOP order at -30% of
+         entry premium. No take-profit order, no lot splitting. Jeff
+         exits manually whenever he chooses.
+Step 7 — Print the day's outcome as a chat message Jeff can copy into his
+         own log (full entry if a trade happened, one-liner if not) —
+         see references/trade-log.md. Nothing is auto-written to Drive.
+Step 8 — Display run summary
 ```
 
 Read `references/config.md` for the exact parameters (window, budget, delta
@@ -101,11 +104,14 @@ review process (see § Weekly Review below for the review workflow itself).
 
 ---
 
-## Step 1 — Capture Opening Range (9:00 AM CT run only)
+## Step 1 — Capture Opening Range
 
-Fetch SPY 5-min bars for 9:30–10:00 AM ET via `Twelve Data:get_time_series`.
-OR_high = max high, OR_low = min low across that window. Store for reuse by
-every later run that day — don't recompute.
+Fetch SPY 5-min bars for 9:30–10:00 AM ET. Prefer `Twelve Data:get_time_series`
+if that connector is enabled in the session; otherwise use
+`Public:get_price_history(symbol="SPY", period="DAY", aggregation="FIVE_MINUTES",
+trading_session_toggle="REGULAR_HOURS")` and take the bars in that window —
+it returns the same OHLCV shape. OR_high = max high, OR_low = min low
+across that window.
 
 ## Step 2 — Previous Day Context
 
@@ -119,8 +125,8 @@ Public:get_portfolio(account_id="5OI27877")
 Public:get_orders(account_id="5OI27877")
 ```
 If a same-day SPY/SPX option position or pending order from this strategy
-already exists, skip Steps 4-6 for this run (still do Step 7 if it's the
-2:45 PM CT run).
+already exists, skip Steps 4-6 for this run — one trade per day, and Jeff
+manages the exit himself, so there's nothing else for this run to do.
 
 ## Step 4 — Breakout Check (2-bar confirmation)
 
@@ -147,36 +153,26 @@ the bounded candidates.
 
 ## Step 6 — Submit LIVE
 
-BUY the option, split into Lot A (majority) and Lot B (runner), then
-submit each lot's own unlinked TP/SL pair (+25%/-30% and +40%/-30%
-respectively) as SELL LIMIT DAY orders. See
-`references/public-submission.md` § ORB Submission Sequence. Every call
-here is a real fill — no approval step. No custom alert needed here:
-Public's own order-fill notifications cover every leg automatically (see
-§ Exit Alerts in that file).
+BUY the option (single lot, full N contracts), then submit ONE real STOP
+order (`order_type="STOP"`, not `LIMIT`) at -30% of the fill price to
+close the same quantity. No take-profit order — Jeff exits manually
+whenever he chooses. See `references/public-submission.md` § ORB
+Submission Sequence. Every call here is a real fill — no approval step.
+No custom alert needed here: Public's own order-fill notifications cover
+every leg automatically (see § Exit Alerts in that file).
 
-## Step 7 — Forced End-of-Day Close (2:45 PM CT run only)
+## Step 7 — Log the Day's Outcome (in chat)
 
-Check Lot A and Lot B independently. If either is still open (neither its
-TP nor SL filled), MARKET SELL to close that lot's remaining contracts and
-cancel its still-resting exit leg. See `references/public-submission.md`
-§ End-of-Day Close.
-
-## Step 8 — Log the Day's Outcome
-
-On the 2:45 PM CT run (once the day's outcome is final — TP hit, SL hit,
-EOD close, or no trade at all), read-modify-write the "ORB Trade Log"
-Google Doc via the Google Drive connector, appending:
+Print the entry as a chat message at the end of this run — do NOT write
+to Google Drive or any file; Jeff copies it into his own log at the end
+of each day:
 - **Trade day:** full entry — opening range, confirmation bars, entry
-  rationale, exit outcome, P&L, and honest post-trade analysis
+  rationale, the stop order placed, and honest rationale for the pick
 - **No-trade day:** one-line entry — opening range and final status
 
-See `references/trade-log.md` for the exact template and the Drive
-read-modify-write pattern. Every trading day gets an entry, win or loss or
-nothing — this is a complete record, not a highlight reel, and it's what
-the weekly review runs against.
+See `references/trade-log.md` for the exact template.
 
-## Step 9 — Display Summary
+## Step 8 — Display Summary
 
 ```
 🎯 ORB CHECK — [date] [time] CT
@@ -184,13 +180,12 @@ SPY: $[current_price]
 Opening Range (9:30-10:00 ET): $[OR_low] - $[OR_high]
 Prior Day Range (context only): $[prev_low] - $[prev_high]
 Last 2 completed 5-min bars: $[prior_bar_close] → $[last_bar_close]
-Status: [NO BREAKOUT / WATCHING - bullish/bearish, 1 of 2 confirmed / BULLISH BREAKOUT CONFIRMED / BEARISH BREAKDOWN CONFIRMED / ALREADY TRADED TODAY / EOD CLOSE]
+Status: [NO BREAKOUT / WATCHING - bullish/bearish, 1 of 2 confirmed / BULLISH BREAKOUT CONFIRMED / BEARISH BREAKDOWN CONFIRMED / ALREADY TRADED TODAY]
 
 [If a trade fired:]
 📈 Bought [N] [SPY/SPX] $[strike] [call/put] 0DTE @ $[premium] (Δ[delta])
    Cost: $[total]
-   Lot A: [tier1_qty] ct — TP $[tp_a] / SL $[sl_a]
-   Lot B: [tier2_qty] ct — TP $[tp_b] / SL $[sl_b]   (omit if N=1)
+   Stop order: SELL [N] ct STOP @ $[stop_price] (-30%) — no take-profit order; Jeff exits manually
 ```
 
 ---
@@ -202,8 +197,10 @@ day of each week (see `references/schedule-setup.md` for the schedule),
 or on demand when Jeff asks "run the weekly review" / "how's the breakout
 strategy doing."
 
-1. Read the "ORB Trade Log" Google Doc, filtered to the prior Mon-Fri.
-   If it's empty or has no entries for that week, say so plainly and stop.
+1. Ask Jeff for (or work from, if already pasted into this chat) the trade
+   log entries he's copied down for the prior Mon-Fri — there's no Google
+   Doc this reads automatically anymore (see § Step 7 above). If nothing
+   is available for that week, say so plainly and stop — don't fabricate.
 2. Compute the stats in `references/trade-log.md` § Weekly Review — What
    It Computes (trade frequency, win rate, CALL/PUT and SPY/SPX splits,
    P&L, hold time, fakeout rate on WATCHING events).
@@ -225,9 +222,7 @@ See `references/trade-log.md` for the full output format.
 | Neither SPY nor SPX 0DTE fits $400 budget | Skip the trade, log both costs |
 | No delta ≥ 0.40 strike available | Use closest available, flag in rationale |
 | Today has no 0DTE expiration for SPY (holiday-adjacent quirk) | Skip for the day, log why |
-| Existing position/order from today found | Skip new entry, still run EOD close check if applicable |
+| Existing position/order from today found | Skip new entry — nothing else for this run to do |
 | place_order returns an error | Do NOT retry silently — report to Jeff and skip |
-| It's the 2:45 PM CT run and no position is open | Just log "no position to close," no action needed |
-| Google Drive connector not linked | Report the day's outcome in the run summary anyway, flag that logging failed, tell Jeff to connect it |
-| "ORB Trade Log" doc doesn't exist yet | Create it fresh on first write, no error |
-| Weekly review requested but log is empty/missing for the period | Say so plainly, don't fabricate a review |
+| STOP order placement fails after the BUY fills | Do NOT leave the position unprotected silently — report it immediately and clearly so Jeff can place the stop or exit manually |
+| Weekly review requested but no log entries are available for the period | Say so plainly, don't fabricate a review |

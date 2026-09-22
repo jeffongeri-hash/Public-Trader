@@ -15,8 +15,8 @@ positions = Public:get_portfolio(account_id="5OI27877")
 open_orders = Public:get_orders(account_id="5OI27877")
 ```
 If a same-day SPY/SPX option position or pending order from this strategy
-already exists → skip new entries this run (one trade per day). Still run
-the end-of-day forced-close check regardless (see § End-of-Day Close below).
+already exists → skip new entries this run (one trade per day, and there's
+no bot-managed close to run either — see § End-of-Day Close below).
 
 ---
 
@@ -79,10 +79,18 @@ in the trade log entry — see `references/trade-log.md`.
 
 ---
 
-## ORB Submission Sequence — tiered two-lot exit (revised 9/18/26)
+## ORB Submission Sequence — single lot, stop-loss only (revised 9/22/26)
+
+Retired the tiered two-lot TP/SL bracket after the first live trade: this
+CASH account won't let separate unlinked SELL orders on the same contracts
+total more than the quantity held (a TP leg and an SL leg together exceed
+that), and critically, a SELL **LIMIT** priced below the live market fills
+immediately instead of resting as protection — it is NOT a stop. A real
+stop-loss requires `order_type="STOP"` with `stop_price`, triggering a
+market sell only once the price actually falls there.
 
 ```
-STEP A — BUY TO OPEN (live fill, full N contracts)
+STEP A — BUY TO OPEN (live fill, full N contracts, single lot)
 → Public:place_order(
     account_id="5OI27877",
     instrument_type="OPTION",
@@ -94,62 +102,30 @@ STEP A — BUY TO OPEN (live fill, full N contracts)
     open_close_indicator="OPEN",
     time_in_force="DAY"
   )
+→ Confirm the fill via get_order before sizing the stop — use the actual
+  average fill price as entry_premium, not the limit price submitted
+  (they can differ if price moves between submission and fill).
 
-Once filled, split into two lots:
-  tier1_qty = ceil(N / 2)
-  tier2_qty = N - tier1_qty   # 0 if N == 1
-
-STEP B — LOT A EXITS (tier1_qty contracts)
-→ TP-A: Public:place_order(
+STEP B — STOP-LOSS (quantity N, the whole position)
+→ Public:place_order(
     account_id="5OI27877", instrument_type="OPTION",
-    order_side="SELL", order_type="LIMIT",
+    order_side="SELL", order_type="STOP",
     symbol=<chosen_osi_symbol>,
-    limit_price=round(entry_premium * 1.25, 2),
-    quantity=<tier1_qty>,
-    open_close_indicator="CLOSE", time_in_force="DAY"
-  )
-→ SL-A: Public:place_order(
-    account_id="5OI27877", instrument_type="OPTION",
-    order_side="SELL", order_type="LIMIT",
-    symbol=<chosen_osi_symbol>,
-    limit_price=round(entry_premium * 0.70, 2),
-    quantity=<tier1_qty>,
-    open_close_indicator="CLOSE", time_in_force="DAY"
-  )
-
-STEP C — LOT B EXITS (tier2_qty contracts — SKIP if N == 1, no runner)
-→ TP-B: Public:place_order(
-    account_id="5OI27877", instrument_type="OPTION",
-    order_side="SELL", order_type="LIMIT",
-    symbol=<chosen_osi_symbol>,
-    limit_price=round(entry_premium * 1.40, 2),
-    quantity=<tier2_qty>,
-    open_close_indicator="CLOSE", time_in_force="DAY"
-  )
-→ SL-B: Public:place_order(
-    account_id="5OI27877", instrument_type="OPTION",
-    order_side="SELL", order_type="LIMIT",
-    symbol=<chosen_osi_symbol>,
-    limit_price=round(entry_premium * 0.70, 2),
-    quantity=<tier2_qty>,
+    stop_price=round(entry_premium * 0.70, 2),
+    quantity=<N>,
     open_close_indicator="CLOSE", time_in_force="DAY"
   )
 ```
 
-`time_in_force="DAY"` throughout — a 0DTE option ceases to exist after
-today, so there's nothing to extend.
+No take-profit order. `time_in_force="DAY"` — a 0DTE option ceases to
+exist after today, so there's nothing to extend. Jeff exits the position
+himself, whenever he chooses, for anything other than the stop triggering.
 
-**Unlinked legs warning, per lot:** within Lot A, TP-A and SL-A don't
-cancel each other — whichever fills first, cancel the other **for that lot
-only**. Same for Lot B independently. Lot A and Lot B never interact with
-each other's orders; each pair is its own unlinked bracket sized to its
-own quantity.
-
-Confirm to Jeff as each fires:
+Confirm to Jeff:
   "🎯 ORB [BULLISH BREAKOUT/BEARISH BREAKDOWN] — bought [N] [SPY/SPX]
    [strike] [call/put] 0DTE @ $[premium] (Δ[delta]). Cost: $[premium×100×N].
-   Lot A: [tier1_qty] ct, TP $[tp_a] / SL $[sl_a].
-   Lot B: [tier2_qty] ct, TP $[tp_b] / SL $[sl_b]." (omit Lot B line if N==1)
+   Stop order: SELL [N] ct STOP @ $[stop_price] (-30%). No take-profit
+   order — exit manually whenever you're ready."
 
 ---
 
@@ -166,7 +142,7 @@ $1.63."
 order-fill notification (confirmed via email in Jeff's own account,
 likely push too if enabled in the Public app's own notification settings)
 the instant ANY order on the account fills — this already covers every
-leg this skill submits: the entry BUY, and each of TP-A/SL-A/TP-B/SL-B.
+leg this skill submits: the entry BUY and the single STOP order.
 Nothing extra to configure in this skill for that. Jeff should just
 confirm push notifications for order fills are enabled in Public's own
 app (Account Settings → Notifications) if he wants faster-than-email
@@ -174,36 +150,14 @@ delivery.
 
 ---
 
-## End-of-Day Close (2:45 PM CT / 3:45 PM ET run only)
+## End-of-Day Close — retired (revised 9/22/26)
 
-```
-positions = Public:get_portfolio(account_id="5OI27877")
-```
-Check each lot independently — either or both may still be open:
-```
-If Lot A still has open contracts (neither TP-A nor SL-A filled):
-→ Public:place_order(
-    account_id="5OI27877", instrument_type="OPTION",
-    order_side="SELL", order_type="MARKET",
-    symbol=<osi_symbol>, quantity=<Lot A remaining qty>,
-    open_close_indicator="CLOSE", time_in_force="DAY"
-  )
-  Cancel whichever of TP-A/SL-A is still resting.
-
-If Lot B still has open contracts (neither TP-B nor SL-B filled):
-→ Public:place_order(
-    account_id="5OI27877", instrument_type="OPTION",
-    order_side="SELL", order_type="MARKET",
-    symbol=<osi_symbol>, quantity=<Lot B remaining qty>,
-    open_close_indicator="CLOSE", time_in_force="DAY"
-  )
-  Cancel whichever of TP-B/SL-B is still resting.
-```
-
-Confirm to Jeff:
-  "⏰ EOD FORCED CLOSE — [TICKER] [strike] [call/put], [N] ct sold at
-   $[price] (P&L: $[gain/loss]). 0DTE contract would have expired
-   [ITM/OTM] otherwise." (report per lot if only one lot needed closing)
+No bot-managed forced close. Since this routine only runs once a day at
+10:10 AM ET, there's no later run to do a close check anyway. Jeff exits
+the position himself; the STOP order from § ORB Submission Sequence is the
+only automated protection. If Jeff asks mid-day whether a position is
+still open, check with `Public:get_portfolio(account_id="5OI27877")` and
+report status plainly — don't place any order unless he asks you to.
 
 ---
 
@@ -226,7 +180,9 @@ If the Public connector is not linked:
 | `get_quotes` | Live SPY price for the breakout check; option premiums |
 | `get_option_expirations` | Confirm 0DTE availability for SPY/SPX today |
 | `get_option_greeks` | Delta check for strike selection |
-| `place_order` | Live single-leg equity-quote-read / option order — EXECUTES IMMEDIATELY |
+| `get_price_history` | Fallback for SPY 5-min bars when Twelve Data isn't enabled in the session (period="DAY", aggregation="FIVE_MINUTES") |
+| `place_order` | Live BUY and the single STOP order — EXECUTES IMMEDIATELY |
+| `get_order` | Confirm the BUY's actual fill price before sizing the stop |
 
 No `place_multileg_order` needed — this strategy is always a single-leg
 long call or long put, never a spread.

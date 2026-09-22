@@ -118,51 +118,42 @@ whether these projections are actually tracking realized moves.
 contracts = floor($400 / (premium × 100)), minimum 1
 ```
 
-## Exit Rule — tiered, two-lot exit (revised 9/18/26 based on live trade data)
-The 90%/-50% unified exit was replaced after the first live trade showed
-premium peaking well short of +90% and fading fast — a fixed distant target
-was unlikely to ever fill, leaving the trade dependent on the SL or a forced
-EOD close instead.
+## Exit Rule — single stop-loss only, manual exit (revised 9/22/26)
+The tiered two-lot TP/SL bracket was retired after the first live trade
+showed two problems: (1) this CASH account won't let multiple unlinked
+resting SELL orders on the same contracts total more than the quantity
+held, so TP and SL legs couldn't both rest at once; and (2) a SELL LIMIT
+priced below the live market fills immediately instead of resting as
+protection — a real stop needs `order_type="STOP"`. Jeff also asked to
+manage exits himself rather than have the bot force-close at end of day.
 
 ```
-tier1_qty = ceil(N / 2)   # majority — closer, more achievable target
-tier2_qty = N - tier1_qty  # runner — remainder, let it ride further
+N = contracts bought (single lot, no tiering)
 
-Lot A (tier1_qty contracts):
-  TP-A: SELL LIMIT @ entry_premium × 1.25 (+25%)
-  SL-A: SELL LIMIT @ entry_premium × 0.70 (−30%)
-
-Lot B (tier2_qty contracts, the runner — only exists if N >= 2):
-  TP-B: SELL LIMIT @ entry_premium × 1.40 (+40%)
-  SL-B: SELL LIMIT @ entry_premium × 0.70 (−30%)
+STOP: SELL, order_type="STOP", stop_price = round(entry_premium × 0.70, 2)
+      (−30%), quantity = N, time_in_force="DAY"
 ```
 
-**If N = 1** (can't split): skip tiering entirely — single TP @ +25% / single
-SL @ -30%, same as Lot A alone.
+No take-profit order is placed. No forced end-of-day close — Jeff decides
+when to exit and does it himself; the STOP order is the only automated
+protection resting on the position.
 
-Each lot's TP/SL pair is unlinked from the other lot's pair, same convention
-as before: whichever of a lot's two orders fills first, cancel the other
-**for that lot only** — the other lot's orders keep resting independently.
-All four (or two, if N=1) orders are `time_in_force="DAY"`.
+## End-of-Day Close
+No bot-managed forced close (revised 9/22/26). Jeff exits manually
+whenever he chooses — the STOP order is the only automated exit. Reminder
+in every run's summary if a position is still open: SPY 0DTE is
+physical-settlement, so an unclosed position expiring ITM/OTM matters —
+that risk is now Jeff's to manage, not the bot's.
 
-## End-of-Day Forced Close
-**2:45 PM CT (3:45 PM ET):** if either lot still has an open position
-(neither its TP nor its SL has filled), submit a MARKET SELL to close that
-lot's remaining contracts. Do not let a 0DTE SPY position ride into
-physical-settlement expiration — SPX is cash-settled
-and lower-risk to hold, but SPY is not.
-
-## Schedule
-- **9:00 AM CT (10:00 AM ET):** capture opening range (30-min high/low),
-  fetch previous day H/L for context, run the first breakout check
-  immediately using whatever 5-min bars have already closed by then.
-- **Every 5 minutes from 9:00 AM CT through 2:45 PM CT:** breakout check,
-  aligned to each new 5-min bar close (this cadence matches the 2-bar
-  confirmation rule — checking less often than every 5 minutes risks
-  missing or delaying a confirmed signal by a full bar or more).
-  (skipped once a trade has already been taken today).
-- **2:45 PM CT:** also the forced end-of-day close, run last regardless of
-  whether a new entry fired that check.
+## Schedule (revised 9/22/26)
+- **10:10 AM ET (9:10 AM CT), once per day, weekdays:** capture the
+  opening range (30-min high/low), fetch previous day H/L for context,
+  and run the ONE breakout check for the day — using the 10:00-10:05 and
+  10:05-10:10 ET bars, the earliest pair that can satisfy 2-bar
+  confirmation. This is a single run, not 5-minute polling — the cloud
+  routine's Schedule trigger has a 1-hour minimum interval, so continuous
+  intraday polling isn't available. A breakout that confirms later in the
+  day (after 10:10 AM ET) will not be caught by this design.
 
 ## Budget Warning
 0DTE SPY ATM premiums typically run $150–$400 depending on realized

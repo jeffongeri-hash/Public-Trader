@@ -108,32 +108,28 @@ candidate strikes, delta check via `get_option_greeks`, premium via
 contracts = floor($400 / (premium × 100)), minimum 1
 ```
 
-## Step 7 — Submit (tiered two-lot exit)
+## Step 7 — Submit (single lot, stop-loss only — revised 9/22/26)
 
-BUY the option (CALL or PUT per Step 4) for the full contract count N.
-Split into Lot A (`ceil(N/2)` contracts) and Lot B (`N - ceil(N/2)`
-contracts, the runner — skipped if N=1). Submit each lot's own unlinked
-TP/SL pair: Lot A at +25%/−30%, Lot B at +40%/−30%. See
+BUY the option (CALL or PUT per Step 4) for the full contract count N, one
+lot, no tiering. Once filled, submit ONE `order_type="STOP"` SELL at -30%
+of the entry premium for quantity N. No take-profit order. See
 `references/public-submission.md` § ORB Submission Sequence.
 
-## Step 8 — Forced End-of-Day Close (2:45 PM CT / 3:45 PM ET run only)
+## Step 8 — Print the Log Entry, No Forced Close
 
-```
-Check Lot A and Lot B independently.
-If either lot is still open (neither its TP nor its SL filled) → submit a
-MARKET SELL to close that lot's remaining contracts now, regardless of P&L.
-```
-This is a hard cutoff — do not let a 0DTE SPY position ride into
-physical-settlement expiration.
+No bot-managed end-of-day close — Jeff exits manually whenever he
+chooses. Print the trade-log entry (see `references/trade-log.md`) as a
+chat message so Jeff can copy it into his own record.
 
 ---
 
 ## Daily State to Track
 
 Each day is independent — no state carries from one day to the next except
-the day's own opening range (fixed once at 9:00 AM CT) and whether a trade
-has already fired (checked live via `get_portfolio`/`get_orders`, no
-separate state file needed).
+the day's own opening range and whether a trade has already fired (checked
+live via `get_portfolio`/`get_orders`, no separate state file needed).
+There's only one run per day now, so there's no mid-day state to persist
+across runs either.
 
 ## Output Format
 
