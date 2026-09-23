@@ -81,8 +81,13 @@ Step 5 — If breakout: project a realistic SPY target for the rest of the
          select SPY vs SPX (budget fit), pick 0DTE strike bounded by that
          target (delta >= 0.40), size contracts to $400 budget
 Step 6 — Submit BUY (live), split into Lot A/Lot B, submit each lot's own
-         TP/SL pair (Lot A +25%/-30%, Lot B +40%/-30%) as unlinked
-         SELL LIMIT DAY orders
+         stop-loss (-30%) as a resting SELL STOP_LIMIT DAY order — take-
+         profit (Lot A +25%, Lot B +40%) is tracked as a target to watch,
+         not a second resting order (the account has no OCO support and
+         rejects resting CLOSE quantity beyond what's held)
+Step 6.5 — (Every run while a lot is open) Check the lot's current bid
+         against its TP target; if reached, cancel that lot's resting SL
+         and submit a SELL LIMIT to close it
 Step 7 — (Final run of the day, 2:45 PM CT only) Force-close any position
          still open
 Step 8 — Log the day's outcome to the "ORB Trade Log" Google Doc via the
@@ -148,19 +153,36 @@ the bounded candidates.
 ## Step 6 — Submit LIVE
 
 BUY the option, split into Lot A (majority) and Lot B (runner), then
-submit each lot's own unlinked TP/SL pair (+25%/-30% and +40%/-30%
-respectively) as SELL LIMIT DAY orders. See
-`references/public-submission.md` § ORB Submission Sequence. Every call
-here is a real fill — no approval step. No custom alert needed here:
-Public's own order-fill notifications cover every leg automatically (see
-§ Exit Alerts in that file).
+submit each lot's own stop-loss (-30%) as a resting **SELL STOP_LIMIT**
+DAY order — never `order_type="LIMIT"` for a stop, since a limit priced
+below the market fills immediately instead of waiting (this happened live
+on 9/23/26 and caused an unintended loss). Take-profit (+25% for Lot A,
++40% for Lot B) is recorded as a target and watched every subsequent run
+(§ Step 6.5), not submitted as a second resting order — the account
+rejects resting CLOSE quantity beyond what's currently held, so a lot's
+own TP+SL pair would already exceed capacity and block the other lot's
+exits entirely. See `references/public-submission.md` § ORB Submission
+Sequence and § TP Monitoring. Every call here is a real fill — no approval
+step. After each SL is placed, confirm via `get_order` that it rests as
+`NEW`, not `FILLED`. No custom alert needed beyond that: Public's own
+order-fill notifications cover every leg automatically (see § Exit Alerts
+in that file).
+
+## Step 6.5 — Take-Profit Monitoring (every run while a lot is open)
+
+For each lot still open (position exists, its SL hasn't filled), fetch the
+option's current quote. If the bid has reached that lot's TP target,
+cancel its resting SL, confirm the cancellation, then submit a SELL LIMIT
+to close it at the current bid. See `references/public-submission.md` §
+TP Monitoring for the exact sequence.
 
 ## Step 7 — Forced End-of-Day Close (2:45 PM CT run only)
 
-Check Lot A and Lot B independently. If either is still open (neither its
-TP nor SL filled), MARKET SELL to close that lot's remaining contracts and
-cancel its still-resting exit leg. See `references/public-submission.md`
-§ End-of-Day Close.
+Check Lot A and Lot B independently. If either is still open (its SL
+hasn't filled and Step 6.5 hasn't already closed it on TP), cancel its
+resting SL, confirm the cancellation, then MARKET SELL to close that lot's
+remaining contracts. See `references/public-submission.md` § End-of-Day
+Close.
 
 ## Step 8 — Log the Day's Outcome
 
@@ -189,8 +211,8 @@ Status: [NO BREAKOUT / WATCHING - bullish/bearish, 1 of 2 confirmed / BULLISH BR
 [If a trade fired:]
 📈 Bought [N] [SPY/SPX] $[strike] [call/put] 0DTE @ $[premium] (Δ[delta])
    Cost: $[total]
-   Lot A: [tier1_qty] ct — TP $[tp_a] / SL $[sl_a]
-   Lot B: [tier2_qty] ct — TP $[tp_b] / SL $[sl_b]   (omit if N=1)
+   Lot A: [tier1_qty] ct — SL $[sl_a] (resting) / TP $[tp_a] (watched)
+   Lot B: [tier2_qty] ct — SL $[sl_b] (resting) / TP $[tp_b] (watched)   (omit if N=1)
 ```
 
 ---
@@ -227,6 +249,8 @@ See `references/trade-log.md` for the full output format.
 | Today has no 0DTE expiration for SPY (holiday-adjacent quirk) | Skip for the day, log why |
 | Existing position/order from today found | Skip new entry, still run EOD close check if applicable |
 | place_order returns an error | Do NOT retry silently — report to Jeff and skip |
+| A resting SL (STOP_LIMIT) comes back `FILLED` immediately via get_order instead of `NEW` | Stop — do not place further orders this run. Report the fill price/qty to Jeff; that lot is now closed, so treat it as such (no separate SL still to manage for it) |
+| A resting-order placement is rejected for exceeding "available to close" quantity | This account has no OCO — resting CLOSE quantity is capped at what's held. Only the SL should ever be resting (see `references/public-submission.md` § ORB Submission Sequence); if this still happens, report to Jeff rather than retrying with a different quantity |
 | It's the 2:45 PM CT run and no position is open | Just log "no position to close," no action needed |
 | Google Drive connector not linked | Report the day's outcome in the run summary anyway, flag that logging failed, tell Jeff to connect it |
 | "ORB Trade Log" doc doesn't exist yet | Create it fresh on first write, no error |

@@ -79,7 +79,19 @@ in the trade log entry — see `references/trade-log.md`.
 
 ---
 
-## ORB Submission Sequence — tiered two-lot exit (revised 9/18/26)
+## ORB Submission Sequence — tiered two-lot exit (revised 9/23/26 — STOP-only resting orders)
+
+**9/23/26 incident:** a prior version of this sequence submitted SL-A/SL-B
+as `order_type="LIMIT"`. Since that price sits below the live market, the
+"limit" was immediately marketable and filled on the spot instead of
+waiting for the price to actually fall — a real, unintended loss. On top
+of that, Public's account rejects resting SELL/CLOSE orders once their
+combined quantity exceeds the quantity held, and has no OCO/bracket order
+type — so submitting a resting TP limit *and* a resting SL for the same
+lot already consumes the full position, and the other lot's exit orders
+get rejected outright. Fix: **the only resting order per lot is its
+STOP_LIMIT stop-loss.** Take-profit is checked actively every run instead
+of resting — see § TP Monitoring below.
 
 ```
 STEP A — BUY TO OPEN (live fill, full N contracts)
@@ -95,61 +107,88 @@ STEP A — BUY TO OPEN (live fill, full N contracts)
     time_in_force="DAY"
   )
 
-Once filled, split into two lots:
+Once filled, use the ACTUAL average fill price as entry_premium (not the
+limit price submitted) — Public may fill better than the limit. Split into
+two lots:
   tier1_qty = ceil(N / 2)
   tier2_qty = N - tier1_qty   # 0 if N == 1
 
-STEP B — LOT A EXITS (tier1_qty contracts)
-→ TP-A: Public:place_order(
-    account_id="5OI27877", instrument_type="OPTION",
-    order_side="SELL", order_type="LIMIT",
-    symbol=<chosen_osi_symbol>,
-    limit_price=round(entry_premium * 1.25, 2),
-    quantity=<tier1_qty>,
-    open_close_indicator="CLOSE", time_in_force="DAY"
-  )
+STEP B — LOT A STOP-LOSS ONLY (tier1_qty contracts; resting)
 → SL-A: Public:place_order(
     account_id="5OI27877", instrument_type="OPTION",
-    order_side="SELL", order_type="LIMIT",
+    order_side="SELL", order_type="STOP_LIMIT",
     symbol=<chosen_osi_symbol>,
-    limit_price=round(entry_premium * 0.70, 2),
+    stop_price=round(entry_premium * 0.70, 2),
+    limit_price=round(entry_premium * 0.70 - 0.05, 2),
     quantity=<tier1_qty>,
     open_close_indicator="CLOSE", time_in_force="DAY"
   )
+  Record tp_a_target = round(entry_premium * 1.25, 2) for active monitoring
+  — do NOT submit it as an order yet.
 
-STEP C — LOT B EXITS (tier2_qty contracts — SKIP if N == 1, no runner)
-→ TP-B: Public:place_order(
-    account_id="5OI27877", instrument_type="OPTION",
-    order_side="SELL", order_type="LIMIT",
-    symbol=<chosen_osi_symbol>,
-    limit_price=round(entry_premium * 1.40, 2),
-    quantity=<tier2_qty>,
-    open_close_indicator="CLOSE", time_in_force="DAY"
-  )
+STEP C — LOT B STOP-LOSS ONLY (tier2_qty contracts — SKIP if N == 1; resting)
 → SL-B: Public:place_order(
     account_id="5OI27877", instrument_type="OPTION",
-    order_side="SELL", order_type="LIMIT",
+    order_side="SELL", order_type="STOP_LIMIT",
     symbol=<chosen_osi_symbol>,
-    limit_price=round(entry_premium * 0.70, 2),
+    stop_price=round(entry_premium * 0.70, 2),
+    limit_price=round(entry_premium * 0.70 - 0.05, 2),
     quantity=<tier2_qty>,
     open_close_indicator="CLOSE", time_in_force="DAY"
   )
+  Record tp_b_target = round(entry_premium * 1.40, 2) for active monitoring.
 ```
 
 `time_in_force="DAY"` throughout — a 0DTE option ceases to exist after
-today, so there's nothing to extend.
+today, so there's nothing to extend. **Never use `order_type="LIMIT"` for
+a stop-loss** — always `STOP_LIMIT`, with `stop_price` at the target and
+`limit_price` a few cents below it, so the order only becomes active once
+price actually reaches the stop and doesn't fill immediately on submission.
 
-**Unlinked legs warning, per lot:** within Lot A, TP-A and SL-A don't
-cancel each other — whichever fills first, cancel the other **for that lot
-only**. Same for Lot B independently. Lot A and Lot B never interact with
-each other's orders; each pair is its own unlinked bracket sized to its
-own quantity.
+After preflighting/placing each SL, call `get_order` to confirm it came
+back `status="NEW"` (resting) — if it shows `FILLED` immediately, something
+is wrong (e.g. stop_price above the current bid) and Jeff should be told
+before any further orders go out.
 
 Confirm to Jeff as each fires:
   "🎯 ORB [BULLISH BREAKOUT/BEARISH BREAKDOWN] — bought [N] [SPY/SPX]
    [strike] [call/put] 0DTE @ $[premium] (Δ[delta]). Cost: $[premium×100×N].
-   Lot A: [tier1_qty] ct, TP $[tp_a] / SL $[sl_a].
-   Lot B: [tier2_qty] ct, TP $[tp_b] / SL $[sl_b]." (omit Lot B line if N==1)
+   Lot A: [tier1_qty] ct, SL $[sl_a] (resting) / TP $[tp_a] (watched).
+   Lot B: [tier2_qty] ct, SL $[sl_b] (resting) / TP $[tp_b] (watched)."
+   (omit Lot B line if N==1)
+
+---
+
+## TP Monitoring (every 5-minute run, while any lot is still open)
+
+Since take-profit is no longer a resting order, each intraday run must
+check it explicitly for any lot that's still open (i.e., still appears in
+`get_portfolio` positions and its SL order in `get_orders` hasn't filled):
+
+```
+→ Public:get_quotes(account_id="5OI27877", symbols=[<osi_symbol>], instrument_type="OPTION")
+  current_bid = the option's current bid (use bid, not last, since that's
+    what a SELL would actually realize)
+
+For each lot still open:
+  if current_bid >= tp_a_target (or tp_b_target for Lot B):
+    1. Public:cancel_order(account_id="5OI27877", order_id=<that lot's resting SL order id>)
+    2. Confirm cancellation via get_order (status="CANCELLED") before selling —
+       otherwise the SL could fill concurrently and you'd oversell.
+    3. Public:place_order(
+         account_id="5OI27877", instrument_type="OPTION",
+         order_side="SELL", order_type="LIMIT",
+         symbol=<osi_symbol>,
+         limit_price=round(current_bid, 2),
+         quantity=<that lot's qty>,
+         open_close_indicator="CLOSE", time_in_force="DAY"
+       )
+    4. Report the TP exit to Jeff in that run's summary.
+```
+
+This keeps exactly one resting order per open lot at any time (its SL),
+which stays within the account's no-OCO capacity limit, while still
+capturing the take-profit target within one 5-minute-bar's delay.
 
 ---
 
@@ -179,25 +218,29 @@ delivery.
 ```
 positions = Public:get_portfolio(account_id="5OI27877")
 ```
-Check each lot independently — either or both may still be open:
+Check each lot independently — either or both may still be open (SL-A/SL-B
+are the only resting orders now; TP is watched, not resting — see § TP
+Monitoring above, which also may have already closed a lot before 2:45 PM):
 ```
-If Lot A still has open contracts (neither TP-A nor SL-A filled):
+If Lot A still has open contracts (SL-A hasn't filled and no TP exit fired):
+→ Public:cancel_order(account_id="5OI27877", order_id=<SL-A order id>)
+  Confirm CANCELLED via get_order before selling.
 → Public:place_order(
     account_id="5OI27877", instrument_type="OPTION",
     order_side="SELL", order_type="MARKET",
     symbol=<osi_symbol>, quantity=<Lot A remaining qty>,
     open_close_indicator="CLOSE", time_in_force="DAY"
   )
-  Cancel whichever of TP-A/SL-A is still resting.
 
-If Lot B still has open contracts (neither TP-B nor SL-B filled):
+If Lot B still has open contracts (SL-B hasn't filled and no TP exit fired):
+→ Public:cancel_order(account_id="5OI27877", order_id=<SL-B order id>)
+  Confirm CANCELLED via get_order before selling.
 → Public:place_order(
     account_id="5OI27877", instrument_type="OPTION",
     order_side="SELL", order_type="MARKET",
     symbol=<osi_symbol>, quantity=<Lot B remaining qty>,
     open_close_indicator="CLOSE", time_in_force="DAY"
   )
-  Cancel whichever of TP-B/SL-B is still resting.
 ```
 
 Confirm to Jeff:
@@ -227,6 +270,9 @@ If the Public connector is not linked:
 | `get_option_expirations` | Confirm 0DTE availability for SPY/SPX today |
 | `get_option_greeks` | Delta check for strike selection |
 | `place_order` | Live single-leg equity-quote-read / option order — EXECUTES IMMEDIATELY |
+| `preflight_order` | Estimate cost/buying-power impact before a live `place_order` call |
+| `get_order` | Confirm a submitted order's actual status (esp. that an SL rests as `NEW`, not `FILLED`) |
+| `cancel_order` | Cancel a lot's resting SL before a TP exit or EOD forced close |
 
 No `place_multileg_order` needed — this strategy is always a single-leg
 long call or long put, never a spread.

@@ -118,32 +118,61 @@ whether these projections are actually tracking realized moves.
 contracts = floor($400 / (premium × 100)), minimum 1
 ```
 
-## Exit Rule — tiered, two-lot exit (revised 9/18/26 based on live trade data)
+## Exit Rule — tiered, two-lot exit (revised 9/23/26 after a live order-handling bug)
 The 90%/-50% unified exit was replaced after the first live trade showed
 premium peaking well short of +90% and fading fast — a fixed distant target
 was unlikely to ever fill, leaving the trade dependent on the SL or a forced
 EOD close instead.
+
+**9/23/26 incident — why SL is now a STOP order, and TP is no longer a
+resting order:** a live run submitted SL-A as a plain `SELL LIMIT` at
+`entry_premium × 0.70`. Since that price was below the live bid, the
+"limit" order was immediately marketable and filled on the spot at close
+to the entry price — a real, unintended loss, not a stop-loss waiting for
+the price to actually fall. Separately, Public's account rejects resting
+SELL/CLOSE orders once their combined quantity exceeds the quantity
+currently held — there is no OCO/bracket support, so a lot's own TP+SL
+pair (2 orders each for `tier1_qty`/`tier2_qty` contracts) already sums to
+the full position, leaving zero room for the other lot's exits, which get
+rejected outright. Both problems are fixed by the rules below.
 
 ```
 tier1_qty = ceil(N / 2)   # majority — closer, more achievable target
 tier2_qty = N - tier1_qty  # runner — remainder, let it ride further
 
 Lot A (tier1_qty contracts):
-  TP-A: SELL LIMIT @ entry_premium × 1.25 (+25%)
-  SL-A: SELL LIMIT @ entry_premium × 0.70 (−30%)
+  SL-A (resting): SELL STOP_LIMIT, stop_price = entry_premium × 0.70 (−30%),
+    limit_price = stop_price − 0.05 (rounded to the cent) to stay marketable
+    once triggered without under-selling by more than a nickel
+  TP-A (active check, not resting): target = entry_premium × 1.25 (+25%)
 
 Lot B (tier2_qty contracts, the runner — only exists if N >= 2):
-  TP-B: SELL LIMIT @ entry_premium × 1.40 (+40%)
-  SL-B: SELL LIMIT @ entry_premium × 0.70 (−30%)
+  SL-B (resting): SELL STOP_LIMIT, stop_price = entry_premium × 0.70 (−30%),
+    limit_price = stop_price − 0.05
+  TP-B (active check, not resting): target = entry_premium × 1.40 (+40%)
 ```
 
-**If N = 1** (can't split): skip tiering entirely — single TP @ +25% / single
-SL @ -30%, same as Lot A alone.
+**Never submit a stop-loss as `order_type="LIMIT"`.** A SELL LIMIT priced
+below the market fills immediately instead of waiting — always use
+`order_type="STOP_LIMIT"` (`stop_price` = the target, `limit_price` a few
+cents below it) so the order rests until the price actually falls there.
 
-Each lot's TP/SL pair is unlinked from the other lot's pair, same convention
-as before: whichever of a lot's two orders fills first, cancel the other
-**for that lot only** — the other lot's orders keep resting independently.
-All four (or two, if N=1) orders are `time_in_force="DAY"`.
+**TP is monitored, not resting.** Only the two SL orders (one per lot) rest
+on the account at any time — that's the only way to stay within the
+account's "resting CLOSE quantity ≤ held quantity" cap with no OCO support.
+Each subsequent 5-minute run (see `references/public-submission.md` § TP
+Monitoring) fetches the current option quote for any lot still open and,
+if its TP target has been reached, cancels that lot's resting SL and
+submits a SELL LIMIT (or MARKET, if the quote already moved past target)
+to close it.
+
+**If N = 1** (can't split): skip tiering entirely — single SL-A (resting
+STOP_LIMIT) at -30%, single TP-A (active check) at +25%, same as Lot A
+alone.
+
+Each lot's SL is independent of the other lot's SL — closing one lot never
+touches the other's resting order. All resting orders are
+`time_in_force="DAY"`.
 
 ## End-of-Day Forced Close
 **2:45 PM CT (3:45 PM ET):** if either lot still has an open position
