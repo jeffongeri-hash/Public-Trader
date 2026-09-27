@@ -13,7 +13,7 @@ missing.
 
 ---
 
-## 2026-09-21 — BULLISH BREAKOUT (CALL) — TWO ENTRIES (gate issue, see analysis)
+## 2026-09-21 — BULLISH BREAKOUT (CALL) — TWO ENTRIES (confirmed automated gate failure)
 
 **Opening Range / confirmation bars:** not recoverable (backfilled from trade history only; no live run log exists for this day)
 
@@ -33,7 +33,7 @@ missing.
 
 **Day total P&L: +$28.88**
 
-**Post-trade analysis:** Two separate entry/exit cycles fired on the same underlying the same day. If both were triggered by the strategy's own breakout check (rather than manual intervention), this is the same one-trade-per-day gate failure documented on 9/25 below — the gate only checks whether a position is *currently* open, so once Trade 1 closed, the next run had a flat portfolio and treated it as a fresh entry opportunity. Both trades happened to be profitable, but the mechanism is unreliable, not evidence the gate works.
+**Post-trade analysis (confirmed 9/27/26 by Jeff):** this double-entry was the automated strategy itself, not manual — the one-trade-per-day gate only checked whether a position was *currently* open, so once Trade 1 closed, the next run found a flat portfolio and treated it as a fresh entry opportunity. This is a real, confirmed instance of the gate failure (distinct from 9/25's, which was Jeff manually — see that day's entry). Both trades happened to be profitable here, which is luck, not evidence the gate worked. This is the actual motivating case for the 9/27/26 gate hardening in `config.md` § One Trade Per Day.
 
 ---
 
@@ -163,8 +163,8 @@ the actual documented automated bug from this week.
 **Win/loss by trade-event:**
 | Date | Direction | Contracts | P&L | Outcome type |
 |---|---|---|---|---|
-| 9/21 (T1) | CALL | 5 | +$8.55 | Non-standard early exit — automated or manual unconfirmed |
-| 9/21 (T2) | CALL | 3 | +$20.33 | Non-standard early exit — automated or manual unconfirmed |
+| 9/21 (T1) | CALL | 5 | +$8.55 | Automated entry; confirmed gate failure re-entry followed |
+| 9/21 (T2) | CALL | 3 | +$20.33 | **Automated gate-failure re-entry (confirmed)** |
 | 9/23 | PUT | 4 | +$19.44 | Mixed: 1 lot mis-fired SL (documented automated bug), 1 lot legit gain |
 | 9/24 | CALL | 3 | -$118.67 | Both lots SL, clean, automated |
 | 9/25 (T1) | PUT | 2 | -$77.78 | Both lots SL, clean, automated |
@@ -182,24 +182,26 @@ the actual documented automated bug from this week.
 
 ## Recommendation (revised 9/27/26 after discussion with Jeff)
 
-**Correction to the original review:** the 9/25 second entry was **not** an
-automated one-trade-per-day gate failure — Jeff confirmed he placed it
-manually. The catastrophic -84% exit on that trade is a real account loss
-but isn't confirmed evidence of a STOP_LIMIT bug in the algorithm, since
-that position wasn't opened or (necessarily) protected by the strategy's
-own exit logic. Whether 9/21's two quick, non-standard-exit trades were
-also manual is still unconfirmed — worth checking with Jeff before drawing
-conclusions about the algorithm's actual same-day-only discipline.
+**Correction to the original review, confirmed by Jeff on 9/27/26:** the
+week had two same-day double-entries with two different causes:
+- **9/21 — confirmed automated gate failure.** The strategy itself
+  re-entered ~3 minutes after Trade 1 closed, because the gate only
+  checked "is a position currently open" rather than "did an entry already
+  fire today." This is the real, confirmed bug motivating the fix below.
+- **9/25 — confirmed manual.** Jeff placed the second entry himself; it
+  was not the algorithm. The catastrophic -84% exit on that trade is a
+  real account loss but isn't confirmed evidence of a STOP_LIMIT bug in
+  the algorithm's exit logic, since that position wasn't necessarily
+  protected by the strategy's own resting-order structure at all.
 
 **Changes made as of 9/27/26, ahead of the coming week:**
-1. **One-trade-per-day gate hardened anyway.** Even though this week's
-   double-entries were manual, the gate only ever checked "is a position
-   currently open" — a real gap regardless of what triggered it this week.
-   It now also checks the trade log itself for any entry already logged
-   today (including a new "entry fired" marker written the moment the BUY
-   fills, not just at close), independent of current position state. See
-   `config.md` § One Trade Per Day and `public-submission.md` § Duplicate /
-   Exposure Check.
+1. **One-trade-per-day gate hardened.** Confirmed necessary by the 9/21
+   failure above — the gate only ever checked "is a position currently
+   open." It now also checks the trade log itself for any entry already
+   logged today (including a new "entry fired" marker written the moment
+   the BUY fills, not just at close), independent of current position
+   state. See `config.md` § One Trade Per Day and `public-submission.md`
+   § Duplicate / Exposure Check.
 2. **Stop-loss buffer widened from $0.05 to $0.15.** Jeff's call: keep the
    resting order a `STOP_LIMIT` (not a plain market `STOP`) but give it
    three times the room to actually trigger during a fast move. See
@@ -208,12 +210,12 @@ conclusions about the algorithm's actual same-day-only discipline.
    confirmed bug this week — the 9/23 incident (SL submitted as a
    marketable `LIMIT`) remains the one documented automated stop-handling
    bug so far.
-3. **Net P&L this week is -$399.79**, including the manual -$251.66 trade.
-   Excluding that manual trade, the algorithm's own trades net -$148.13
-   across the days it ran cleanly (9/23, 9/24, 9/25-T1) plus the two
-   unconfirmed 9/21 trades. Still nowhere near enough sample to judge the
-   underlying edge — revisit after a few clean weeks under the hardened
-   gate and wider stop buffer.
+3. **Net P&L this week is -$399.79**, including Jeff's manual -$251.66
+   trade. Excluding that one manual trade, the algorithm's own trades
+   (9/21 both — the gate failure included, since it was still the
+   algorithm firing — plus 9/23, 9/24, 9/25-T1) net **-$148.13**. Still
+   nowhere near enough sample to judge the underlying edge — revisit after
+   a few clean weeks under the hardened gate and wider stop buffer.
 4. Google Drive logging will be picked up in a fresh chat session (this
    one's tool set was fixed at startup and can't add it mid-session); this
    file stays the source of truth in the meantime.
