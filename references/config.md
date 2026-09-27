@@ -88,9 +88,11 @@ has since closed (TP, SL, or EOD) and the account is flat again.
 **Two checks, not one (revised 9/27/26):**
 1. `get_orders` / `get_portfolio` for a currently-open same-day position or
    pending order from this strategy.
-2. The trade log itself (`ORB-Trade-Log.md` / the "ORB Trade Log" doc) for
-   *any* entry already logged today — fired-but-not-yet-closed or fully
-   closed. Check #1 alone is not enough: once a position closes, the
+2. The trade log itself (`ORB-Trade-Log.md` at the repo root, or the
+   "ORB Trade Log" doc if Drive is enabled for this session — see
+   `trade-log.md` § Log Storage) for *any* entry already logged today,
+   fired-but-not-yet-closed or fully closed. Check #1 alone is not
+   enough: once a position closes, the
    account goes flat and #1 passes even though a trade already happened
    today. Write a one-line "entry fired" marker to the log the moment
    Step 6's BUY fills (before placing the SL orders), not just the full
@@ -154,7 +156,7 @@ delta ≥ 0.40, use the closest available within that range and flag it —
 don't reach past `projected_target` to find a higher delta.
 
 Log the `projected_target` and which method produced it in the trade log
-entry (see `references/trade-log.md`) — the weekly review should track
+entry (see `trade-log.md`) — the weekly review should track
 whether these projections are actually tracking realized moves.
 
 ## Position Sizing
@@ -212,7 +214,7 @@ below the market fills immediately instead of waiting — always use
 **TP is monitored, not resting.** Only the two SL orders (one per lot) rest
 on the account at any time — that's the only way to stay within the
 account's "resting CLOSE quantity ≤ held quantity" cap with no OCO support.
-Each subsequent 5-minute run (see `references/public-submission.md` § TP
+Each subsequent 5-minute run (see `public-submission.md` § TP
 Monitoring) fetches the current option quote for any lot still open and,
 if its TP target has been reached, cancels that lot's resting SL and
 submits a SELL LIMIT (or MARKET, if the quote already moved past target)
@@ -249,7 +251,7 @@ and lower-risk to hold, but SPY is not.
 0DTE SPY ATM premiums typically run $150–$400 depending on realized
 volatility that morning. **Budget cut from $400 to $300 on 9/27/26**, per
 Jeff's call after the account took a substantial loss this week (see
-`ORB-Trade-Log.md` for the week-of-9/21 review) — smaller position size
+`ORB-Trade-Log.md` at the repo root for the week-of-9/21 review) — smaller position size
 while the one-trade-per-day gate fix and wider SL buffer prove themselves.
 At $300, a premium above ~$3.00 buys only 1 contract, so Lot A/B tiering
 (which needs N≥2) won't always be available — that's expected at this

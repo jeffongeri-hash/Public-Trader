@@ -21,11 +21,14 @@ the end-of-day forced-close check regardless (see § End-of-Day Close below).
 **Also check the trade log itself (revised 9/27/26):** a position/order
 check alone misses the case where an earlier entry already closed today
 (TP, SL, or EOD) — the account goes flat again and this check alone would
-wrongly treat it as a fresh day. Read today's date in `ORB-Trade-Log.md` /
-the "ORB Trade Log" doc; if any entry already exists for today (including
-an "entry fired" marker with no close yet), skip new entries this run too.
-Write that one-line marker immediately after Step A's BUY fills, before
-placing SL-A/SL-B, so it's there for the very next run to see.
+wrongly treat it as a fresh day. Read today's date from whichever target
+is active (the "ORB Trade Log" Google Doc, or `ORB-Trade-Log.md` at the
+repo root if Drive isn't enabled for this session — see
+`trade-log.md` § Log Storage); if any entry already exists for today
+(including an "entry fired" marker with no close yet), skip new entries
+this run too. Write that one-line marker immediately after Step A's BUY
+fills, before placing SL-A/SL-B, so it's there for the very next run to
+see.
 
 ---
 
@@ -84,7 +87,7 @@ STEP 5 — Pick the underlying
 ```
 
 Log `projected_target` and which method (measured move vs. IV) produced it
-in the trade log entry — see `references/trade-log.md`.
+in the trade log entry — see `trade-log.md`.
 
 ---
 
@@ -264,11 +267,16 @@ Confirm to Jeff:
 
 ## Pre-Connection Fallback
 
-If the Public connector is not linked:
-1. Complete Steps 1–4 of signal-logic.md normally (opening range, prior day
-   context, breakout check)
-2. Generate the order object without placing it
-3. Display as a card, tell Jeff to connect the Public connector and re-run
+**Revised 9/27/26:** since the opening range, prior-day context, and
+breakout check now all run on `Public:get_price_history` (not a separate
+Twelve Data connector — see `signal-logic.md` § Step 1), there is no
+partial mode left if the Public connector is not linked. If it's missing:
+1. Do not attempt Steps 1–7 — there's no data source for them either.
+2. Report to Jeff that the Public connector isn't linked and this run
+   can't proceed at all, and tell him to connect it and re-run.
+3. Still log a one-line "NO TRADE — connector unavailable" entry for the
+   day if it's the 2:45 PM CT run, so the trade log doesn't show a
+   silent gap.
 
 ---
 
@@ -278,7 +286,8 @@ If the Public connector is not linked:
 |------|---------|
 | `get_portfolio` | Check for an existing same-day position (dup/exposure check) |
 | `get_orders` | Check for pending orders (dup check) |
-| `get_quotes` | Live SPY price for the breakout check; option premiums; VIX level (context only, `instrument_type="INDEX"`) |
+| `get_price_history` | 5-min SPY bars for the opening range and 2-bar breakout check (`aggregation="FIVE_MINUTES"`); prior-day SPY high/low (`aggregation="ONE_DAY"`) — see `signal-logic.md` §§ Step 1-2, 4 |
+| `get_quotes` | Live SPY price for display; option premiums; VIX level (context only, `instrument_type="INDEX"`) |
 | `get_option_expirations` | Confirm 0DTE availability for SPY/SPX today |
 | `get_option_greeks` | Delta check for strike selection |
 | `place_order` | Live single-leg equity-quote-read / option order — EXECUTES IMMEDIATELY |

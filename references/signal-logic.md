@@ -9,12 +9,24 @@ content belonged to a different skill/conversation and has been removed.
 
 ```
 Fetch SPY intraday bars for 9:30–10:00 AM ET (8:30–9:00 AM CT) via
-Twelve Data:get_time_series(symbol="SPY", interval="5min",
-  start_date=<today 9:30 ET>, end_date=<today 10:00 ET>)
+Public:get_price_history(symbol="SPY", period="DAY",
+  aggregation="FIVE_MINUTES", trading_session_toggle="REGULAR_HOURS")
+→ take the 6 bars timestamped 9:30 through 9:55 ET (each bar's timestamp is
+  its start time, so this set covers the full 9:30-10:00 window; the 10:00
+  bar itself covers 10:00-10:05 and is NOT part of the opening range)
 
 OR_high = max(high) across those bars
 OR_low  = min(low) across those bars
 ```
+
+**Tool note (confirmed 9/25/26 live run):** the "Twelve Data" connector
+referenced in earlier drafts of this skill was not actually connected in
+the session that ran this strategy live, and does not need to be —
+`Public:get_price_history` supplies the same 5-min SPY bars and has been
+used successfully for this exact purpose. If a Twelve Data connector is
+ever connected and preferred, `get_time_series(symbol="SPY",
+interval="5min", ...)` is an equivalent substitute, but don't treat its
+absence as a blocker — use Public's own price history.
 
 Store OR_high/OR_low for reuse by every subsequent check that day — don't
 recompute mid-day, the range is fixed once the first 30 minutes are over.
@@ -22,8 +34,10 @@ recompute mid-day, the range is fixed once the first 30 minutes are over.
 ## Step 2 — Fetch Previous Day High/Low (context only)
 
 ```
-Fetch SPY's prior trading day daily bar via Twelve Data:get_time_series
-(interval="1day", outputsize=2) → use the second-most-recent row.
+Fetch SPY's prior trading day daily bar via
+Public:get_price_history(symbol="SPY", period="WEEK",
+  aggregation="ONE_DAY") → use the second-most-recent row (the most
+  recent is today, still in progress).
 
 prev_day_high, prev_day_low
 ```
@@ -58,9 +72,11 @@ Exposure Check for the log-based check that closes this gap.
 
 ```
 Fetch the most recent completed 5-minute SPY bars via
-Twelve Data:get_time_series(symbol="SPY", interval="5min", outputsize=3)
-— discard the currently-forming bar (if the API includes it), use the two
-most recently CLOSED bars.
+Public:get_price_history(symbol="SPY", period="DAY",
+  aggregation="FIVE_MINUTES", trading_session_toggle="REGULAR_HOURS")
+— the last bar in the response may be a partial/forming bar (its
+timestamp won't align to a clean 5-min boundary, e.g. "10:19:14" instead
+of "10:15:00") — discard it, use the two most recently CLOSED bars before it.
 
 last_bar, prior_bar = the two most recent completed 5-min closes
 
@@ -104,12 +120,12 @@ only completed 5-min bar closes count.
 
 Before picking a strike, project a realistic SPY target for the rest of
 the day (measured move from the opening range vs. IV-implied expected
-move, whichever is closer to current price — see `references/config.md`
+move, whichever is closer to current price — see `config.md`
 § Price Target Projection for the formulas). This bounds which strikes
 are even considered — no reaching for a deep, unrealistic strike just
 because its delta looks appealing.
 
-See `references/public-submission.md` § ORB Option Selection for the full
+See `public-submission.md` § ORB Option Selection for the full
 tool-call sequence (target projection, 0DTE expiration lookup, bounded
 candidate strikes, delta check via `get_option_greeks`, premium via
 `get_quotes`, SPY-vs-SPX budget comparison).
@@ -126,7 +142,7 @@ BUY the option (CALL or PUT per Step 4) for the full contract count N.
 Split into Lot A (`ceil(N/2)` contracts) and Lot B (`N - ceil(N/2)`
 contracts, the runner — skipped if N=1). Submit each lot's own unlinked
 TP/SL pair: Lot A at +25%/−30%, Lot B at +40%/−30%. See
-`references/public-submission.md` § ORB Submission Sequence.
+`public-submission.md` § ORB Submission Sequence.
 
 ## Step 8 — Forced End-of-Day Close (2:45 PM CT / 3:45 PM ET run only)
 
@@ -144,8 +160,10 @@ physical-settlement expiration.
 
 Each day is independent — no state carries from one day to the next except
 the day's own opening range (fixed once at 9:00 AM CT) and whether a trade
-has already fired (checked live via `get_portfolio`/`get_orders`, no
-separate state file needed).
+has already fired. That check is no longer `get_portfolio`/`get_orders`
+alone (revised 9/27/26 — see § Step 3 above): it also reads today's date
+from the trade log itself, since a closed position looks identical to a
+fresh day if you only check current positions.
 
 ## Output Format
 

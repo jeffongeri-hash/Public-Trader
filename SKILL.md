@@ -16,8 +16,11 @@ description: >
   (runner, remainder) at +40%/-30% — forced end-of-day close
   at 2:45 PM CT to avoid holding into physical-settlement expiration.
   Every trading day (trade or no trade) gets logged to a Google Doc named
-  "ORB Trade Log" (via the Google Drive connector — read-modify-write, no
-  local filesystem dependency) with full entry/exit rationale and
+  "ORB Trade Log" via the Google Drive connector when it's enabled for the
+  session, falling back to committing to `ORB-Trade-Log.md` in this repo
+  otherwise (confirmed necessary 9/21-9/25/26, when Drive was authorized
+  on the account but not enabled for the session) — either way, full
+  entry/exit rationale and
   post-trade analysis; a separate WEEKLY REVIEW run (first trading day of
   each week) reads that log and recommends whether to keep the strategy
   as-is or adjust it. This is NOT the old 16-ticker 5-strategy swing
@@ -91,9 +94,10 @@ Step 6.5 — (Every run while a lot is open) Check the lot's current bid
          and submit a SELL LIMIT to close it
 Step 7 — (Final run of the day, 2:45 PM CT only) Force-close any position
          still open
-Step 8 — Log the day's outcome to the "ORB Trade Log" Google Doc via the
-         Google Drive connector (full entry if a trade happened,
-         one-liner if not) — see references/trade-log.md
+Step 8 — Log the day's outcome (full entry if a trade happened, one-liner
+         if not) to whichever target is active — the "ORB Trade Log"
+         Google Doc, or ORB-Trade-Log.md in this repo if Drive isn't
+         enabled for this session — see references/trade-log.md
 Step 9 — Display run summary
 ```
 
@@ -109,7 +113,10 @@ review process (see § Weekly Review below for the review workflow itself).
 
 ## Step 1 — Capture Opening Range (9:00 AM CT run only)
 
-Fetch SPY 5-min bars for 9:30–10:00 AM ET via `Twelve Data:get_time_series`.
+Fetch SPY 5-min bars for 9:30–10:00 AM ET via `Public:get_price_history`
+(see `references/signal-logic.md` § Step 1 for the exact call — the
+"Twelve Data" connector named in earlier drafts isn't needed and wasn't
+connected during the 9/25/26 live run; Public's own price history works).
 OR_high = max high, OR_low = min low across that window. Store for reuse by
 every later run that day — don't recompute.
 
@@ -205,16 +212,27 @@ Close.
 ## Step 8 — Log the Day's Outcome
 
 On the 2:45 PM CT run (once the day's outcome is final — TP hit, SL hit,
-EOD close, or no trade at all), read-modify-write the "ORB Trade Log"
-Google Doc via the Google Drive connector, appending:
+EOD close, or no trade at all), read-modify-write the log, appending:
 - **Trade day:** full entry — opening range, confirmation bars, entry
   rationale, exit outcome, P&L, and honest post-trade analysis
 - **No-trade day:** one-line entry — opening range and final status
 
-See `references/trade-log.md` for the exact template and the Drive
-read-modify-write pattern. Every trading day gets an entry, win or loss or
-nothing — this is a complete record, not a highlight reel, and it's what
-the weekly review runs against.
+**Where to write (confirmed 9/27/26):** the "ORB Trade Log" Google Doc via
+the Google Drive connector is preferred, but check the connector is
+actually *enabled for this session* first — Drive being authorized on the
+account is not the same thing, and this silently produced zero logging
+for several days the week of 9/21. If Drive isn't enabled here, write to
+`ORB-Trade-Log.md` at this repo's root instead (same read-modify-write
+content, committed and pushed to the repo's working branch instead of
+saved to a Doc) — do not skip logging just because Drive isn't available.
+Also write the one-line "entry fired" marker immediately after Step 6's
+BUY fills, to whichever target is active, not just the full entry at
+close (needed by Step 3's log-based one-trade-per-day check).
+
+See `references/trade-log.md` for the exact template and read-modify-write
+pattern. Every trading day gets an entry, win or loss or nothing — this is
+a complete record, not a highlight reel, and it's what the weekly review
+runs against.
 
 ## Step 9 — Display Summary
 
@@ -243,7 +261,8 @@ day of each week (see `references/schedule-setup.md` for the schedule),
 or on demand when Jeff asks "run the weekly review" / "how's the breakout
 strategy doing."
 
-1. Read the "ORB Trade Log" Google Doc, filtered to the prior Mon-Fri.
+1. Read whichever target has been active (the "ORB Trade Log" Google Doc,
+   or `ORB-Trade-Log.md` at the repo root), filtered to the prior Mon-Fri.
    If it's empty or has no entries for that week, say so plainly and stop.
 2. Compute the stats in `references/trade-log.md` § Weekly Review — What
    It Computes (trade frequency, win rate, CALL/PUT and SPY/SPX splits,
@@ -261,7 +280,7 @@ See `references/trade-log.md` for the full output format.
 
 | Situation | Action |
 |---|---|
-| Public connector not linked | Generate the order as a text card, do NOT place, tell Jeff to connect it |
+| Public connector not linked | Can't proceed at all — the opening range and breakout check now run on `Public:get_price_history`, not a separate data connector. Report to Jeff, log "NO TRADE — connector unavailable" if it's the 2:45 PM CT run, tell him to connect it and re-run (see `references/public-submission.md` § Pre-Connection Fallback) |
 | SPY price fetch fails | Retry once; if still failing, skip this run and log |
 | Neither SPY nor SPX 0DTE fits $300 budget | Skip the trade, log both costs |
 | No delta ≥ 0.40 strike available | Use closest available, flag in rationale |
@@ -271,6 +290,6 @@ See `references/trade-log.md` for the full output format.
 | A resting SL (STOP_LIMIT) comes back `FILLED` immediately via get_order instead of `NEW` | Stop — do not place further orders this run. Report the fill price/qty to Jeff; that lot is now closed, so treat it as such (no separate SL still to manage for it) |
 | A resting-order placement is rejected for exceeding "available to close" quantity | This account has no OCO — resting CLOSE quantity is capped at what's held. Only the SL should ever be resting (see `references/public-submission.md` § ORB Submission Sequence); if this still happens, report to Jeff rather than retrying with a different quantity |
 | It's the 2:45 PM CT run and no position is open | Just log "no position to close," no action needed |
-| Google Drive connector not linked | Report the day's outcome in the run summary anyway, flag that logging failed, tell Jeff to connect it |
-| "ORB Trade Log" doc doesn't exist yet | Create it fresh on first write, no error |
+| Google Drive connector not linked, or authorized but not enabled for this session | Fall back to `ORB-Trade-Log.md` at the repo root (see Step 8) — do not skip logging. Still flag in the run summary that Drive wasn't used, so Jeff knows to check the session's connector toggle |
+| "ORB Trade Log" doc (or `ORB-Trade-Log.md`) doesn't exist yet | Create it fresh on first write, no error |
 | Weekly review requested but log is empty/missing for the period | Say so plainly, don't fabricate a review |

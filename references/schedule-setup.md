@@ -271,24 +271,32 @@ change the setup:
   `claude -p` directly. The weekly review's cadence (once a week) is well
   above the 1-hour floor, so it can use the native Schedule trigger as-is.
 - **No persistent local filesystem between runs** — this is exactly why
-  the trade log lives in a Google Doc (see `references/trade-log.md`)
+  the trade log lives in a Google Doc (see `trade-log.md`)
   rather than `~/orb-trade-log.md`: a cloud routine has nowhere durable to
   keep a local file across separate invocations, but Drive persists fine.
 
 Set up as **two separate routines**:
-1. **ORB Check** — trigger: API. Connect a repo containing this
-   `public-trader/` folder; instructions tell Claude to read `SKILL.md`
-   and everything under `references/` from that repo and follow it for
-   the run. An external 5-minute cron calls the routine's endpoint during
-   market hours.
+1. **ORB Check** — trigger: API. Connect this repo (the connected
+   repository itself — "public-trader/" here just names the repo, there
+   is no nested subfolder by that name); instructions tell Claude to read
+   `SKILL.md` at the repo root and everything under `references/` and
+   follow it for the run. An external 5-minute cron calls the routine's
+   endpoint during market hours.
 2. **Weekly Review** — trigger: Schedule, first trading day of the week,
    8:00 AM CT. Same repo connection; instructions point at
-   `references/trade-log.md` § Weekly Review instead.
+   `trade-log.md` § Weekly Review instead.
 
-Connectors needed on both: **Public** (trading) and **Twelve Data** (5-min
-bars) at minimum; the weekly review additionally needs **Google Drive**
-(reading the trade log) — the ORB Check routine needs it too, since it
-writes the daily log entry as part of Step 8. No Notifications tab setup
-is needed for exit alerts — Public itself sends order-fill notifications
-for every leg (entry, TP, SL) automatically; see
-`references/public-submission.md` § Exit Alerts.
+Connectors needed: **Public** (trading; also supplies the 5-min SPY bars
+via `get_price_history` — a separate market-data connector like Twelve
+Data is NOT required, see `signal-logic.md` § Step 1) and, ideally,
+**Google Drive** (reading/writing the "ORB Trade Log" doc). **Confirmed
+9/27/26:** Google Drive being authorized on the account is not the same
+as it being enabled for a given chat/routine session — check the
+session's own connector toggle, not just the account-level connector
+list, or logging will silently fail to write anywhere. If Drive isn't
+enabled for a run, fall back to reading/writing `ORB-Trade-Log.md` at
+this repo's root via the repo connection instead (same read-modify-write
+pattern, git commit instead of a Doc save) — this is what actually ran
+the week of 9/21-9/25. No Notifications tab setup is needed for exit
+alerts — Public itself sends order-fill notifications for every leg
+(entry, TP, SL) automatically; see `public-submission.md` § Exit Alerts.

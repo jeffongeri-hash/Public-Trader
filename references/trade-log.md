@@ -1,23 +1,43 @@
 # Trade Log & Weekly Review Reference
 
-## Log Storage: Google Drive (not a local file)
-The trade log lives in a **Google Doc**, not `~/orb-trade-log.md` on any
-particular machine — this strategy may run from a local Mac (launchd) or
-from a Claude Code cloud Routine with no persistent local filesystem
-between runs, so the log needs to live somewhere both can reach.
+## Log Storage: Google Drive, with a confirmed GitHub fallback
+The trade log needs to live somewhere reachable from any run regardless of
+machine — not `~/orb-trade-log.md` on one particular machine's local disk,
+since this strategy may run from a local Mac (launchd) or a Claude Code
+cloud Routine with no persistent local filesystem between runs. A **Google
+Doc** was the original choice for this; a **file committed to this repo**
+satisfies the same requirement just as well (it's remote and reachable from
+any session with repo access) and is the one confirmed to have actually
+worked when Drive access failed.
 
-**Doc name:** `ORB Trade Log` (create it once via `Google_Drive__create_file`
-if it doesn't already exist; search for it by name first via
-`Google_Drive__search_files` before assuming it's missing).
+**Primary: Google Doc named `ORB Trade Log`**
+(create it once via `Google_Drive__create_file` if it doesn't already
+exist; search for it by name first via `Google_Drive__search_files` before
+assuming it's missing).
+- Write pattern (read-modify-write, since Drive has no true append):
+  1. `Google_Drive__read_file_content` on the doc to get current contents
+  2. Append the new entry's markdown text to the end
+  3. `Google_Drive__update_file` with the full updated content
 
-**Write pattern (read-modify-write, since Drive has no true append):**
-1. `Google_Drive__read_file_content` on the doc to get current contents
-2. Append the new entry's markdown text to the end
-3. `Google_Drive__update_file` with the full updated content
+**Before relying on Drive, confirm it: check that the Google Drive
+connector is enabled for *this specific session*, not just authorized on
+the account** — those are different things (a per-conversation toggle vs.
+an account-level connector list), and the difference silently produced
+zero logging for several days the week of 9/21/26.
 
-This happens automatically as part of every day's 2:45 PM CT run — logging
-is not optional or a "remember to do this later" step. Every trading day
-gets an entry written to the Doc before that run's summary is displayed.
+**Fallback: `ORB-Trade-Log.md` at this repo's root**, used automatically
+whenever Drive isn't enabled for the session — do not skip logging just
+because Drive is unavailable.
+- Write pattern (same read-modify-write shape, git instead of Drive):
+  1. Read the current file content
+  2. Append the new entry's markdown text to the end (same template as
+     below, either target)
+  3. Commit and push to the repo's active working branch
+
+This happens automatically as part of every day's 2:45 PM CT run, to
+whichever target is active — logging is not optional or a "remember to do
+this later" step. Every trading day gets an entry written before that
+run's summary is displayed.
 
 ## What Gets Logged
 
@@ -101,9 +121,11 @@ whatever partial data exists for the current week and say so explicitly —
 don't wait silently for week-end.
 
 ### What It Reads
-The `ORB Trade Log` Google Doc, filtered to the review period (the prior
-Mon–Fri). If the doc is missing or has no entries for that week, say so
-and stop — don't fabricate a review from nothing.
+Whichever target has been active (the `ORB Trade Log` Google Doc, or
+`ORB-Trade-Log.md` at the repo root — see § Log Storage above; check both
+if unsure which one recent runs actually wrote to), filtered to the review
+period (the prior Mon–Fri). If it's missing or has no entries for that
+week, say so and stop — don't fabricate a review from nothing.
 
 ### What It Computes
 ```
@@ -172,4 +194,4 @@ Recommendation: [keep as-is / specific change / not enough data yet] — [reason
 ```
 
 This weekly review is a SEPARATE run from the 5-minute intraday polling —
-see `references/schedule-setup.md` for its own trigger.
+see `schedule-setup.md` for its own trigger.

@@ -1,7 +1,7 @@
 # ORB Trade Log
 
 Actual trade history for the SPY Opening Range Breakout 0DTE strategy,
-account 5OI27877. This is the real log referenced by `trade-log.md` — kept
+account 5OI27877. This is the real log referenced by `references/trade-log.md` — kept
 here in the repo (as a GitHub file) rather than the Google Doc, since the
 Google Drive connector wasn't enabled for the session that ran this
 strategy this week. Entries below Sep 21–25 are backfilled from account
@@ -53,7 +53,7 @@ No transactions on the account this day. Opening range / final status not recove
 
 **Exit — Lot (2 ct):**
 - Outcome: SL fired at 10:14:35 AM ET — **12 seconds after entry**
-- Exit price: $0.81 (proceeds $162.00) — this is the incident referenced in `public-submission.md`: an SL submitted as a plain `LIMIT` order priced below the live market filled immediately instead of resting, closing this lot for a loss (-9.2% vs. entry) almost instantly instead of waiting for an actual -30% move.
+- Exit price: $0.81 (proceeds $162.00) — this is the incident referenced in `references/public-submission.md`: an SL submitted as a plain `LIMIT` order priced below the live market filled immediately instead of resting, closing this lot for a loss (-9.2% vs. entry) almost instantly instead of waiting for an actual -30% move.
 - P&L: -$16.20 (approx., before fees) on this lot
 
 **Exit — Lot (2 ct):**
@@ -65,7 +65,7 @@ No transactions on the account this day. Opening range / final status not recove
 - Total time held: 10:14:23 AM – 10:19:03 AM ET (~4.7 min for the full round trip)
 - **Total P&L: +$19.44** (day nets positive despite the mis-handled lot)
 
-**Post-trade analysis:** This is the incident that led to the STOP_LIMIT-only fix in the current skill (`public-submission.md` / `config.md`, revised 9/23/26). The day nets a small gain only because the second lot's exit was strong enough to offset the botched near-instant exit on the first lot — the underlying execution bug was real and costly on its own terms, just not on this day's net P&L.
+**Post-trade analysis:** This is the incident that led to the STOP_LIMIT-only fix in the current skill (`references/public-submission.md` / `references/config.md`, revised 9/23/26). The day nets a small gain only because the second lot's exit was strong enough to offset the botched near-instant exit on the first lot — the underlying execution bug was real and costly on its own terms, just not on this day's net P&L.
 
 ---
 
@@ -140,7 +140,7 @@ one-trade-per-day gate failure — Jeff confirmed he placed this entry
 manually himself, outside the strategy. Earlier analysis in this log
 attributed it to the gate only checking "is a position currently open"
 rather than "did an entry already fire today"; that gap is real and worth
-closing regardless (see `config.md` § One Trade Per Day, revised 9/27/26
+closing regardless (see `references/config.md` § One Trade Per Day, revised 9/27/26
 to also check the trade log), but it wasn't what happened here. Likewise,
 the -84% exit (vs. the intended -30% floor) doesn't necessarily reflect a
 STOP_LIMIT slippage bug in the algorithm's exit logic, since this position
@@ -200,13 +200,13 @@ week had two same-day double-entries with two different causes:
    open." It now also checks the trade log itself for any entry already
    logged today (including a new "entry fired" marker written the moment
    the BUY fills, not just at close), independent of current position
-   state. See `config.md` § One Trade Per Day and `public-submission.md`
-   § Duplicate / Exposure Check.
+   state. See `references/config.md` § One Trade Per Day and
+   `references/public-submission.md` § Duplicate / Exposure Check.
 2. **Stop-loss buffer widened from $0.05 to $0.15.** Jeff's call: keep the
    resting order a `STOP_LIMIT` (not a plain market `STOP`) but give it
    three times the room to actually trigger during a fast move. See
-   `config.md` § Exit Rule and `public-submission.md` § ORB Submission
-   Sequence. This is a precautionary improvement, not a fix for a
+   `references/config.md` § Exit Rule and `references/public-submission.md`
+   § ORB Submission Sequence. This is a precautionary improvement, not a fix for a
    confirmed bug this week — the 9/23 incident (SL submitted as a
    marketable `LIMIT`) remains the one documented automated stop-handling
    bug so far.
