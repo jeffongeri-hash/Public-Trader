@@ -107,10 +107,10 @@ against Jeff's own manual trades colliding with a later automated run).
 ## Underlying Selection for the Actual Option (SPY vs SPX)
 1. Get 0DTE ATM premium for both SPY and SPX in the breakout direction.
 2. contract_cost = premium × 100 for either (both are 100-multiplier).
-3. If both fit under $400 → default to **SPY** (tighter spreads, more liquid).
-4. If only one fits under $400 → use that one.
-5. If neither fits under $400 → skip the trade, log why (this will be rare —
-   SPX 0DTE ATM premiums are typically far above $400, so SPY will almost
+3. If both fit under $300 → default to **SPY** (tighter spreads, more liquid).
+4. If only one fits under $300 → use that one.
+5. If neither fits under $300 → skip the trade, log why (this will be rare —
+   SPX 0DTE ATM premiums are typically far above $300, so SPY will almost
    always be the one used in practice).
 
 ## Price Target Projection (informs strike selection only — added 9/18/26)
@@ -159,7 +159,7 @@ whether these projections are actually tracking realized moves.
 
 ## Position Sizing
 ```
-contracts = floor($400 / (premium × 100)), minimum 1
+contracts = floor($300 / (premium × 100)), minimum 1
 ```
 
 ## Exit Rule — tiered, two-lot exit (revised 9/23/26 after a live order-handling bug)
@@ -247,5 +247,10 @@ and lower-risk to hold, but SPY is not.
 
 ## Budget Warning
 0DTE SPY ATM premiums typically run $150–$400 depending on realized
-volatility that morning — this is expected and the reason the budget is
-$400, not $200 like the equity-era config.
+volatility that morning. **Budget cut from $400 to $300 on 9/27/26**, per
+Jeff's call after the account took a substantial loss this week (see
+`ORB-Trade-Log.md` for the week-of-9/21 review) — smaller position size
+while the one-trade-per-day gate fix and wider SL buffer prove themselves.
+At $300, a premium above ~$3.00 buys only 1 contract, so Lot A/B tiering
+(which needs N≥2) won't always be available — that's expected at this
+budget, not an error; see § Exit Rule's "If N = 1" case.

@@ -78,9 +78,9 @@ STEP 4 — Premium for each underlying's chosen strike
   contract_cost = premium × 100 (for either underlying — both are 100-multiplier)
 
 STEP 5 — Pick the underlying
-  If both contract_costs ≤ $400 → use SPY (tighter spreads, more liquid)
-  If only one ≤ $400 → use that one
-  If neither ≤ $400 → SKIP the trade, log both costs in the summary
+  If both contract_costs ≤ $300 → use SPY (tighter spreads, more liquid)
+  If only one ≤ $300 → use that one
+  If neither ≤ $300 → SKIP the trade, log both costs in the summary
 ```
 
 Log `projected_target` and which method (measured move vs. IV) produced it

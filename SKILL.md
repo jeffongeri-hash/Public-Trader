@@ -9,7 +9,8 @@ description: >
   close beyond that range before triggering (no single-bar fakeouts) — a
   confirmed break above triggers a live BUY of a same-day (0DTE) CALL, a
   confirmed break below triggers a live BUY of a same-day PUT — on
-  whichever of SPY/SPX fits a $400 budget (SPY by default). Previous day's
+  whichever of SPY/SPX fits a $300 budget (SPY by default; cut from $400 on
+  9/27/26 after a substantial account loss). Previous day's
   high/low is shown as context only, not part of the trigger. One trade
   per day; tiered exit — Lot A (~half the contracts) at +25%/-30%, Lot B
   (runner, remainder) at +40%/-30% — forced end-of-day close
@@ -47,7 +48,7 @@ opening range (high/low). Require **2 consecutive completed 5-minute bars**
 to close above that high (or below that low) before treating it as a
 confirmed breakout — a single bar poking beyond the range doesn't count.
 On confirmation, buy a same-day CALL (bullish) or PUT (bearish). Trade
-whichever of SPY or SPX options fits a $400 budget (SPY by default — SPX
+whichever of SPY or SPX options fits a $300 budget (SPY by default — SPX
 rarely fits). One trade per day. Exit is tiered: roughly half the
 contracts (Lot A) target +25%, the rest (Lot B, the runner) target +40% —
 both lots stop out at -30% — or force-close
@@ -79,7 +80,7 @@ Step 4 — Fetch the last 2 completed 5-min SPY bars, check for 2-bar
 Step 5 — If breakout: project a realistic SPY target for the rest of the
          day (measured move vs IV expected move, more conservative wins),
          select SPY vs SPX (budget fit), pick 0DTE strike bounded by that
-         target (delta >= 0.40), size contracts to $400 budget
+         target (delta >= 0.40), size contracts to $300 budget
 Step 6 — Submit BUY (live), split into Lot A/Lot B, submit each lot's own
          stop-loss (-30%) as a resting SELL STOP_LIMIT DAY order — take-
          profit (Lot A +25%, Lot B +40%) is tracked as a target to watch,
@@ -163,7 +164,7 @@ projects a realistic SPY target for the rest of the day (measured move
 from the opening range vs. IV-implied expected move, whichever is closer
 to current price — this bounds candidate strikes so a deep, unrealistic
 strike never gets picked just for its delta). Then compares SPY vs SPX
-0DTE premium within that bounded range; picks whichever fits the $400
+0DTE premium within that bounded range; picks whichever fits the $300
 budget (SPY preferred if both fit); selects strike via delta ≥ 0.40 among
 the bounded candidates.
 
@@ -262,7 +263,7 @@ See `references/trade-log.md` for the full output format.
 |---|---|
 | Public connector not linked | Generate the order as a text card, do NOT place, tell Jeff to connect it |
 | SPY price fetch fails | Retry once; if still failing, skip this run and log |
-| Neither SPY nor SPX 0DTE fits $400 budget | Skip the trade, log both costs |
+| Neither SPY nor SPX 0DTE fits $300 budget | Skip the trade, log both costs |
 | No delta ≥ 0.40 strike available | Use closest available, flag in rationale |
 | Today has no 0DTE expiration for SPY (holiday-adjacent quirk) | Skip for the day, log why |
 | Existing position/order from today found | Skip new entry, still run EOD close check if applicable |

@@ -50,7 +50,7 @@ test whether it should be (see § Weekly Review — What It Computes below)
 - Projected target: $[projected_target] (via [measured move / IV expected move] — [show both numbers and which was more conservative])
 - Strike/expiry: $[strike] [call/put], 0DTE exp [date] — [note whether this was bounded by the projected target, or was the natural ATM/delta-0.40 pick anyway]
 - Delta at entry: [delta]
-- Contracts: [N] (floor($400 / ($[premium] x 100)))
+- Contracts: [N] (floor($300 / ($[premium] x 100)))
 - Entry fill: $[premium] x [N] = $[total cost]
 - Rationale: [why this was/wasn't a well-timed entry given where price was relative to the range, any notable context like VIX level or overall day trend if visible from the bars]
 

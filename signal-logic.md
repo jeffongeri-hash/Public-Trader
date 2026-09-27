@@ -117,7 +117,7 @@ candidate strikes, delta check via `get_option_greeks`, premium via
 ## Step 6 — Sizing
 
 ```
-contracts = floor($400 / (premium × 100)), minimum 1
+contracts = floor($300 / (premium × 100)), minimum 1
 ```
 
 ## Step 7 — Submit (tiered two-lot exit)
