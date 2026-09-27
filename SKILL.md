@@ -127,6 +127,15 @@ If a same-day SPY/SPX option position or pending order from this strategy
 already exists, skip Steps 4-6 for this run (still do Step 7 if it's the
 2:45 PM CT run).
 
+**Also check the trade log for today's date (revised 9/27/26):** a
+position/order check alone misses a trade that already closed earlier
+today — the account goes flat again and looks like a fresh day. Check
+`ORB-Trade-Log.md` / the "ORB Trade Log" doc for any entry (including an
+"entry fired" marker) already logged for today's date; if one exists, skip
+Steps 4-6 regardless of current position state. See `references/config.md`
+§ One Trade Per Day and `references/public-submission.md` § Duplicate /
+Exposure Check.
+
 ## Step 4 — Breakout Check (2-bar confirmation)
 
 ```

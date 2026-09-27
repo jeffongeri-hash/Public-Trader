@@ -18,6 +18,15 @@ If a same-day SPY/SPX option position or pending order from this strategy
 already exists → skip new entries this run (one trade per day). Still run
 the end-of-day forced-close check regardless (see § End-of-Day Close below).
 
+**Also check the trade log itself (revised 9/27/26):** a position/order
+check alone misses the case where an earlier entry already closed today
+(TP, SL, or EOD) — the account goes flat again and this check alone would
+wrongly treat it as a fresh day. Read today's date in `ORB-Trade-Log.md` /
+the "ORB Trade Log" doc; if any entry already exists for today (including
+an "entry fired" marker with no close yet), skip new entries this run too.
+Write that one-line marker immediately after Step A's BUY fills, before
+placing SL-A/SL-B, so it's there for the very next run to see.
+
 ---
 
 ## ORB Option Selection (SPY vs SPX, 0DTE)
@@ -108,8 +117,9 @@ STEP A — BUY TO OPEN (live fill, full N contracts)
   )
 
 Once filled, use the ACTUAL average fill price as entry_premium (not the
-limit price submitted) — Public may fill better than the limit. Split into
-two lots:
+limit price submitted) — Public may fill better than the limit. Write the
+"entry fired" one-line marker to the trade log now (see § Duplicate /
+Exposure Check above) before proceeding to Steps B/C. Split into two lots:
   tier1_qty = ceil(N / 2)
   tier2_qty = N - tier1_qty   # 0 if N == 1
 
@@ -119,7 +129,7 @@ STEP B — LOT A STOP-LOSS ONLY (tier1_qty contracts; resting)
     order_side="SELL", order_type="STOP_LIMIT",
     symbol=<chosen_osi_symbol>,
     stop_price=round(entry_premium * 0.70, 2),
-    limit_price=round(entry_premium * 0.70 - 0.05, 2),
+    limit_price=round(entry_premium * 0.70 - 0.15, 2),
     quantity=<tier1_qty>,
     open_close_indicator="CLOSE", time_in_force="DAY"
   )
@@ -132,7 +142,7 @@ STEP C — LOT B STOP-LOSS ONLY (tier2_qty contracts — SKIP if N == 1; resting
     order_side="SELL", order_type="STOP_LIMIT",
     symbol=<chosen_osi_symbol>,
     stop_price=round(entry_premium * 0.70, 2),
-    limit_price=round(entry_premium * 0.70 - 0.05, 2),
+    limit_price=round(entry_premium * 0.70 - 0.15, 2),
     quantity=<tier2_qty>,
     open_close_indicator="CLOSE", time_in_force="DAY"
   )
@@ -142,7 +152,9 @@ STEP C — LOT B STOP-LOSS ONLY (tier2_qty contracts — SKIP if N == 1; resting
 `time_in_force="DAY"` throughout — a 0DTE option ceases to exist after
 today, so there's nothing to extend. **Never use `order_type="LIMIT"` for
 a stop-loss** — always `STOP_LIMIT`, with `stop_price` at the target and
-`limit_price` a few cents below it, so the order only becomes active once
+`limit_price` = stop_price − 0.15 (revised 9/27/26, widened from a nickel
+after a fast move gapped through the old 5-cent buffer without filling —
+see `config.md` § Exit Rule), so the order only becomes active once
 price actually reaches the stop and doesn't fill immediately on submission.
 
 After preflighting/placing each SL, call `get_order` to confirm it came

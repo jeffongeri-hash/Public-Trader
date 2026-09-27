@@ -56,9 +56,27 @@ Prior-day H/L is still not part of this condition — opening range alone
 
 ## One Trade Per Day
 Once a breakout fires and an order is placed, no further entries the same
-day even if price re-crosses back the other way. Check `get_orders` /
-`get_portfolio` for an existing same-day options fill from this strategy
-before allowing a new entry.
+day even if price re-crosses back the other way, and even if that position
+has since closed (TP, SL, or EOD) and the account is flat again.
+
+**Two checks, not one (revised 9/27/26):**
+1. `get_orders` / `get_portfolio` for a currently-open same-day position or
+   pending order from this strategy.
+2. The trade log itself (`ORB-Trade-Log.md` / the "ORB Trade Log" doc) for
+   *any* entry already logged today — fired-but-not-yet-closed or fully
+   closed. Check #1 alone is not enough: once a position closes, the
+   account goes flat and #1 passes even though a trade already happened
+   today. Write a one-line "entry fired" marker to the log the moment
+   Step 6's BUY fills (before placing the SL orders), not just the full
+   entry at close, so this check has something to see on the very next run
+   even while the trade is still open.
+
+If either check finds a same-day entry, skip new entries this run (still
+run the EOD forced-close check if applicable). This is a defensive
+hardening, not a fix for a confirmed automated failure — the 9/25 same-day
+double-entry was a manual trade Jeff placed himself, not the algorithm
+re-entering, but the log-based check closes the gap regardless (including
+against Jeff's own manual trades colliding with a later automated run).
 
 ## Underlying Selection for the Actual Option (SPY vs SPX)
 1. Get 0DTE ATM premium for both SPY and SPX in the breakout direction.
@@ -142,20 +160,28 @@ tier2_qty = N - tier1_qty  # runner — remainder, let it ride further
 
 Lot A (tier1_qty contracts):
   SL-A (resting): SELL STOP_LIMIT, stop_price = entry_premium × 0.70 (−30%),
-    limit_price = stop_price − 0.05 (rounded to the cent) to stay marketable
-    once triggered without under-selling by more than a nickel
+    limit_price = stop_price − 0.15 (rounded to the cent, revised 9/27/26 —
+    see below) to stay marketable once triggered without under-selling by
+    more than fifteen cents
   TP-A (active check, not resting): target = entry_premium × 1.25 (+25%)
 
 Lot B (tier2_qty contracts, the runner — only exists if N >= 2):
   SL-B (resting): SELL STOP_LIMIT, stop_price = entry_premium × 0.70 (−30%),
-    limit_price = stop_price − 0.05
+    limit_price = stop_price − 0.15
   TP-B (active check, not resting): target = entry_premium × 1.40 (+40%)
 ```
 
+**9/27/26 revision — wider stop-limit buffer:** the buffer below `stop_price`
+was widened from a nickel to $0.15 after a fast 0DTE move showed a 5-cent
+window can gap through without filling, leaving a position unprotected well
+past the intended -30% floor. Still `order_type="STOP_LIMIT"` (not a plain
+market `STOP`) — Jeff's call was to keep the limit floor rather than accept
+a guaranteed-fill market order, just give it more room to actually trigger.
+
 **Never submit a stop-loss as `order_type="LIMIT"`.** A SELL LIMIT priced
 below the market fills immediately instead of waiting — always use
-`order_type="STOP_LIMIT"` (`stop_price` = the target, `limit_price` a few
-cents below it) so the order rests until the price actually falls there.
+`order_type="STOP_LIMIT"` (`stop_price` = the target, `limit_price` = stop_price
+− 0.15) so the order rests until the price actually falls there.
 
 **TP is monitored, not resting.** Only the two SL orders (one per lot) rest
 on the account at any time — that's the only way to stay within the

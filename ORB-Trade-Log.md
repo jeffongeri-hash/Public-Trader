@@ -129,15 +129,26 @@ No transactions on the account this day. Opening range / final status not recove
 
 **Post-trade analysis:** Clean, correct mechanics — the breakdown was real (confirmed by both bars), but SPY kept falling past both stops rather than bouncing, so this was a straightforward -30% loss on a valid signal. Nothing to fix about *this* trade's execution.
 
-### Trade 2 (same day, same contract — should not have happened)
+### Trade 2 (same day, same contract — manual, confirmed by Jeff)
 
-**Entry fill:** 3 contracts @ $1.00 = $300.00 at 10:42:36 AM ET — **~5 minutes after Trade 1's stop-loss closed the position out**
+**Entry fill:** 3 contracts @ $1.00 = $300.00 at 10:42:36 AM ET — ~5 minutes after Trade 1's stop-loss closed the position out
 **Exit:** 3 contracts @ $0.16 = $48.16 at 12:15:43 PM ET (~93 min later)
 **P&L: -$251.66 (-83.9% on cost)** — the worst trade of the week by far
 
-**Post-trade analysis — this is the important one:**
-- **Root cause of the re-entry:** the one-trade-per-day gate (`get_portfolio`/`get_orders` — "does a position or order currently exist?") passed because Trade 1 had just closed and the account was flat again. The gate has no persisted memory of "an entry already fired today," so the very next 5-minute run treated the still-falling market as a brand-new, valid signal.
-- **Root cause of the -84% exit vs. the intended -30% floor:** the resting SL was a STOP_LIMIT (stop $0.70, limit $0.65 — a 5-cent buffer). In a fast, illiquid 0DTE move, price can gap straight through a 5-cent-wide limit window without ever trading at a fillable price, leaving the stop un-triggered while the option keeps decaying. The eventual $0.16 exit, 93 minutes later, is consistent with the stop never filling and the position being closed much later (manually or by a subsequent EOD-style check) after most of the value was already gone.
+**Post-trade analysis — correction (9/27/26):** this was **not** an automated
+one-trade-per-day gate failure — Jeff confirmed he placed this entry
+manually himself, outside the strategy. Earlier analysis in this log
+attributed it to the gate only checking "is a position currently open"
+rather than "did an entry already fire today"; that gap is real and worth
+closing regardless (see `config.md` § One Trade Per Day, revised 9/27/26
+to also check the trade log), but it wasn't what happened here. Likewise,
+the -84% exit (vs. the intended -30% floor) doesn't necessarily reflect a
+STOP_LIMIT slippage bug in the algorithm's exit logic, since this position
+wasn't opened by the algorithm and may not have carried the same resting
+SL structure at all — it's shown here as a real, painful loss on the
+account, not as evidence of a system defect. The separately-confirmed
+9/23 incident (an automated SL submitted as a marketable `LIMIT`) remains
+the actual documented automated bug from this week.
 
 **Day total P&L: -$77.78 + -$251.66 = -$329.44**
 
@@ -147,17 +158,17 @@ No transactions on the account this day. Opening range / final status not recove
 
 📊 **WEEKLY REVIEW — Week of Sep 21 – Sep 25, 2026**
 
-**Trading days:** 5 | **Days with ≥1 confirmed trade:** 4 of 5 (80%) | **Total trade-events:** 6 (two days had an unintended second entry)
+**Trading days:** 5 | **Days with ≥1 confirmed trade:** 4 of 5 (80%) | **Total trade-events:** 6 (two days had a second entry — see notes)
 
 **Win/loss by trade-event:**
 | Date | Direction | Contracts | P&L | Outcome type |
 |---|---|---|---|---|
-| 9/21 (T1) | CALL | 5 | +$8.55 | Non-standard early exit |
-| 9/21 (T2) | CALL | 3 | +$20.33 | Non-standard early exit |
-| 9/23 | PUT | 4 | +$19.44 | Mixed: 1 lot mis-fired SL (loss), 1 lot legit gain |
-| 9/24 | CALL | 3 | -$118.67 | Both lots SL, clean |
-| 9/25 (T1) | PUT | 2 | -$77.78 | Both lots SL, clean |
-| 9/25 (T2) | PUT | 3 | -$251.66 | Gate-failure re-entry, stop slippage |
+| 9/21 (T1) | CALL | 5 | +$8.55 | Non-standard early exit — automated or manual unconfirmed |
+| 9/21 (T2) | CALL | 3 | +$20.33 | Non-standard early exit — automated or manual unconfirmed |
+| 9/23 | PUT | 4 | +$19.44 | Mixed: 1 lot mis-fired SL (documented automated bug), 1 lot legit gain |
+| 9/24 | CALL | 3 | -$118.67 | Both lots SL, clean, automated |
+| 9/25 (T1) | PUT | 2 | -$77.78 | Both lots SL, clean, automated |
+| 9/25 (T2) | PUT | 3 | -$251.66 | **Manual trade (confirmed by Jeff), not the algorithm** |
 
 **CALL/PUT split:** 3/3 (by trade-event) | **SPY/SPX split:** 6/0 (SPX never used — consistent with it rarely fitting the $400 budget)
 
@@ -169,8 +180,40 @@ No transactions on the account this day. Opening range / final status not recove
 
 **Per-lot TP vs. SL hit rate under the *current* rule:** only 9/24 and 9/25-T1 cleanly follow the current two-lot STOP_LIMIT design — both are 4-for-4 SL hits, 0 TP hits. Too small a sample to say anything about whether +25%/+40% targets are realistic; everything else this week either predates the rule (9/21) or was compromised by the 9/23 incident bug.
 
-## Recommendation: Something structural is off — do not resume live runs until two bugs are fixed
+## Recommendation (revised 9/27/26 after discussion with Jeff)
 
-1. **One-trade-per-day gate is broken.** It checks "is a position currently open," not "did an entry already fire today." Confirmed to have fired a second, unintended entry on both 9/21 and 9/25, the second time catastrophically. **Fix:** persist an explicit "traded today" flag (e.g., check today's date against the trade log / doc before allowing a new entry, independent of current position state) rather than inferring it from `get_portfolio`.
-2. **Stop-loss can fail to protect the intended -30% floor.** The 9/25 second trade lost -84% instead of -30% because the STOP_LIMIT's 5-cent buffer let price gap through without filling. **Fix:** either widen the limit buffer materially (e.g., $0.15–0.20 instead of $0.05) or switch the resting stop from `STOP_LIMIT` to a plain `STOP` order (guaranteed to convert to a market order on trigger — no fill gap, at the cost of some price certainty). Given 0DTE options can decay to near-zero within minutes, guaranteed execution is worth more here than price precision.
-3. **Net P&L this week is -$399.79**, but removing the gate-bug trade alone still leaves -$148.13 over 4 legitimate trade-days. That's a real signal worth tracking, but 4-5 clean trades is nowhere near enough to judge the underlying edge — revisit this once a few weeks run under the fixed gate and stop logic.
+**Correction to the original review:** the 9/25 second entry was **not** an
+automated one-trade-per-day gate failure — Jeff confirmed he placed it
+manually. The catastrophic -84% exit on that trade is a real account loss
+but isn't confirmed evidence of a STOP_LIMIT bug in the algorithm, since
+that position wasn't opened or (necessarily) protected by the strategy's
+own exit logic. Whether 9/21's two quick, non-standard-exit trades were
+also manual is still unconfirmed — worth checking with Jeff before drawing
+conclusions about the algorithm's actual same-day-only discipline.
+
+**Changes made as of 9/27/26, ahead of the coming week:**
+1. **One-trade-per-day gate hardened anyway.** Even though this week's
+   double-entries were manual, the gate only ever checked "is a position
+   currently open" — a real gap regardless of what triggered it this week.
+   It now also checks the trade log itself for any entry already logged
+   today (including a new "entry fired" marker written the moment the BUY
+   fills, not just at close), independent of current position state. See
+   `config.md` § One Trade Per Day and `public-submission.md` § Duplicate /
+   Exposure Check.
+2. **Stop-loss buffer widened from $0.05 to $0.15.** Jeff's call: keep the
+   resting order a `STOP_LIMIT` (not a plain market `STOP`) but give it
+   three times the room to actually trigger during a fast move. See
+   `config.md` § Exit Rule and `public-submission.md` § ORB Submission
+   Sequence. This is a precautionary improvement, not a fix for a
+   confirmed bug this week — the 9/23 incident (SL submitted as a
+   marketable `LIMIT`) remains the one documented automated stop-handling
+   bug so far.
+3. **Net P&L this week is -$399.79**, including the manual -$251.66 trade.
+   Excluding that manual trade, the algorithm's own trades net -$148.13
+   across the days it ran cleanly (9/23, 9/24, 9/25-T1) plus the two
+   unconfirmed 9/21 trades. Still nowhere near enough sample to judge the
+   underlying edge — revisit after a few clean weeks under the hardened
+   gate and wider stop buffer.
+4. Google Drive logging will be picked up in a fresh chat session (this
+   one's tool set was fixed at startup and can't add it mid-session); this
+   file stays the source of truth in the meantime.

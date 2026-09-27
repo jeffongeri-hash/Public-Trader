@@ -42,6 +42,12 @@ today by this strategy → SKIP the rest of this run (one trade per day).
 Still perform the 2:45 PM CT forced-close check regardless (see
 public-submission.md § End-of-Day Close).
 
+**Also check the trade log for today's date (revised 9/27/26):** this
+position/order check alone misses a trade that already closed earlier
+today, since the account is flat again and looks like a fresh day. See
+`config.md` § One Trade Per Day and `public-submission.md` § Duplicate /
+Exposure Check for the log-based check that closes this gap.
+
 ## Step 4 — Breakout Trigger (2-bar confirmation on the 5-minute chart)
 
 ```
