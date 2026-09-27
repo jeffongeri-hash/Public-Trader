@@ -278,7 +278,7 @@ If the Public connector is not linked:
 |------|---------|
 | `get_portfolio` | Check for an existing same-day position (dup/exposure check) |
 | `get_orders` | Check for pending orders (dup check) |
-| `get_quotes` | Live SPY price for the breakout check; option premiums |
+| `get_quotes` | Live SPY price for the breakout check; option premiums; VIX level (context only, `instrument_type="INDEX"`) |
 | `get_option_expirations` | Confirm 0DTE availability for SPY/SPX today |
 | `get_option_greeks` | Delta check for strike selection |
 | `place_order` | Live single-leg equity-quote-read / option order — EXECUTES IMMEDIATELY |

@@ -117,6 +117,14 @@ every later run that day — don't recompute.
 Fetch SPY's prior session daily high/low. Display alongside the opening
 range every run. **Not part of the trigger** — informational only.
 
+**VIX context (added 9/27/26):** also fetch the current VIX level
+(`Public:get_quotes(symbols=["VIX"], instrument_type="INDEX", account_id="5OI27877")`).
+Display it and log it in every day's trade log entry — **context only, not
+part of the trigger and not yet a filter.** Purpose: build a real dataset
+of VIX-vs-outcome so a future weekly review can test whether VIX level
+should gate or size trades, rather than guessing at thresholds now. See
+`references/config.md` § VIX Context for the rationale.
+
 ## Step 3 — One-Trade-Per-Day Gate
 
 ```
@@ -212,6 +220,7 @@ the weekly review runs against.
 ```
 🎯 ORB CHECK — [date] [time] CT
 SPY: $[current_price]
+VIX: $[vix_level] (context only)
 Opening Range (9:30-10:00 ET): $[OR_low] - $[OR_high]
 Prior Day Range (context only): $[prev_low] - $[prev_high]
 Last 2 completed 5-min bars: $[prior_bar_close] → $[last_bar_close]

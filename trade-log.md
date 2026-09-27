@@ -28,7 +28,7 @@ breakout even confirms vs. how many days go by with nothing).
 ### No-trade day (one line)
 ```
 ## [YYYY-MM-DD] — NO TRADE
-Opening Range: $[OR_low]-$[OR_high] | Final status: [NO BREAKOUT all day / WATCHING seen but never confirmed at HH:MM]
+Opening Range: $[OR_low]-$[OR_high] | VIX: $[vix_level] | Final status: [NO BREAKOUT all day / WATCHING seen but never confirmed at HH:MM]
 ```
 
 ### Trade day (full entry) — write this the moment the position is CLOSED
@@ -41,6 +41,9 @@ contains the complete outcome, not a half-finished one:
 **Opening Range:** $[OR_low] - $[OR_high]
 **Confirmation bars:** [HH:MM] close $[x] and [HH:MM] close $[y], both [above/below] the range
 **Prior day range (context):** $[prev_low] - $[prev_high]
+**VIX (context, added 9/27/26):** $[vix_level] at entry — not part of the
+entry rationale yet; logged so the weekly/monthly review can eventually
+test whether it should be (see § Weekly Review — What It Computes below)
 
 **Entry decision:**
 - Underlying chosen: [SPY/SPX] — [reason: e.g. "SPY fit budget at $X, SPX ATM premium was $Y, over budget"]
@@ -128,6 +131,11 @@ and stop — don't fabricate a review from nothing.
 - Any pattern across the "post-trade analysis" notes worth flagging
   (e.g., "SL hit disproportionately on PUT trades", "Lot B rarely reaches
   +40% and usually round-trips to its stop instead")
+- VIX vs. outcome (added 9/27/26, once enough weeks are logged): does win
+  rate, fakeout rate, or SL-slippage frequency actually vary with the VIX
+  level logged at entry/no-trade? Not computable yet on a handful of days
+  in a narrow VIX band — revisit once several weeks of logged VIX levels
+  span a wider range. See `config.md` § VIX Context for the rationale.
 ```
 A single week is a small sample (at most 5 trading days) — say so plainly
 rather than drawing strong conclusions from 1-2 trades. Treat early weekly

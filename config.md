@@ -26,6 +26,32 @@ bought.
 Fetched and displayed as **context only** — NOT part of the trigger condition.
 Shows Jeff where the opening range sits relative to yesterday's range.
 
+## VIX Context (added 9/27/26)
+Fetch the current VIX level every run
+(`Public:get_quotes(symbols=["VIX"], instrument_type="INDEX", account_id="5OI27877")`)
+and log it — **context only, NOT part of the trigger condition and not
+(yet) a filter on whether to trade.**
+
+Rationale: research on opening-range-breakout strategies suggests they
+tend to underperform in low/range-bound volatility regimes and get noisy
+above roughly VIX 28-30, and 0DTE options carry outsized gamma that makes
+fast moves during high-stress regimes more likely to blow through a
+resting stop. But this account's whole trading history so far sits in a
+narrow, calm VIX band (~14-16 during the week of 9/21-9/25, and mostly
+14-20 over the prior quarter) — nowhere near enough variation or trade
+count to validate a specific threshold from this account's own data yet.
+Logging it now (in every trade-log entry, win or loss or no-trade) builds
+that dataset so a future weekly/monthly review can test it properly before
+any filter gets added.
+
+**Secondary use — IV sanity check:** VIX is also a quick cross-check
+against the option chain's own implied volatility used in the price target
+projection (see § Price Target Projection below). A single-strike IV wildly
+inconsistent with VIX (e.g., the 344.88% reading seen live on 9/25 against
+a same-day VIX of 14.87) is a data glitch, not a real move — discard it in
+favor of the measured-move method when this happens, per the existing
+"whichever is closer to current price" rule.
+
 ## Breakout Trigger — requires 2-bar confirmation on the 5-minute chart
 ```
 Using completed 5-minute SPY candles (not the live/forming price):

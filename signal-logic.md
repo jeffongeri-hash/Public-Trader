@@ -30,6 +30,12 @@ prev_day_high, prev_day_low
 Display these alongside the opening range in every run's output. They do
 NOT affect the trigger — informational only, per Jeff's explicit call.
 
+**VIX (added 9/27/26):** also fetch and display the current VIX level
+(`Public:get_quotes(symbols=["VIX"], instrument_type="INDEX", account_id="5OI27877")`)
+and log it in the trade log entry. Context only for now — see
+`config.md` § VIX Context for why, and for the planned future use once
+enough logged data exists.
+
 ## Step 3 — Check for an Existing Position Today
 
 Before evaluating the breakout condition, check:
@@ -147,6 +153,7 @@ Every run should report:
 ```
 🎯 ORB CHECK — [date] [time] CT
 SPY: $[current_price]
+VIX: $[vix_level] (context only)
 Opening Range (9:30-10:00 ET): $[OR_low] - $[OR_high]
 Prior Day Range (context only): $[prev_day_low] - $[prev_day_high]
 Last 2 completed 5-min bars: $[prior_bar.close] → $[last_bar.close]
