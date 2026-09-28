@@ -16,7 +16,7 @@ confirmed signal by a full bar or more.
 | 2:45 PM | 3:45 PM | Final breakout check **+ forced end-of-day close** |
 
 That's **70 runs per day** between 9:00 AM and 2:45 PM CT, plus **1 weekly
-review run**.
+review run** and, four times a year, **1 quarterly review run**.
 
 ## Weekly Review Schedule
 
@@ -99,6 +99,96 @@ the week) is the one that actually runs and writes the marker. Without
 this, a Monday-only trigger would just never fire that week on a holiday
 Monday — launchd doesn't retry. (`Weekday: 1` = Monday, `2` = Tuesday in
 launchd's convention.)
+
+## Quarterly Review Schedule
+
+**First *trading* day of each calendar quarter, 8:00 AM CT** — Jan, Apr,
+Jul, Oct — reviewing the just-completed prior quarter from the "ORB Trade
+Log" Google Doc (see `references/trade-log.md` § Quarterly Review). Same
+holiday-skip and "already ran this quarter" marker pattern as the weekly
+review, just on a quarterly cadence.
+
+### Step 1: Wrapper script
+
+```bash
+cat > ~/orb-quarterly-review-run.sh << 'EOF'
+#!/bin/bash
+TODAY=$(date +%Y-%m-%d)
+HOLIDAYS=("2026-07-03" "2026-09-07" "2026-11-26" "2026-12-25")
+for h in "${HOLIDAYS[@]}"; do
+  if [ "$TODAY" = "$h" ]; then
+    echo "Market holiday $TODAY — skipping."
+    exit 0
+  fi
+done
+
+# Guard against running twice in one quarter: this fires on the 1st, 2nd,
+# and 3rd of Jan/Apr/Jul/Oct (see plist below) so it still catches the
+# real first trading day of the quarter if the 1st (or the 1st and 2nd)
+# fall on a weekend/holiday — but only the earliest of those that's
+# actually a trading day should run.
+THIS_QUARTER=$(date +%Y)-Q$(( ($(date +%-m)-1)/3 + 1 ))   # e.g. 2026-Q4
+MARKER=~/.orb-quarterly-review-last-run
+if [ -f "$MARKER" ] && [ "$(cat "$MARKER")" = "$THIS_QUARTER" ]; then
+  echo "Quarterly review already ran for $THIS_QUARTER — skipping."
+  exit 0
+fi
+
+claude -p "run the ORB quarterly review" >> ~/orb-quarterly-review.log 2>&1
+echo "$THIS_QUARTER" > "$MARKER"
+EOF
+chmod +x ~/orb-quarterly-review-run.sh
+```
+
+### Step 2: Plist — fires the 1st, 2nd, and 3rd of Jan/Apr/Jul/Oct, wrapper decides which one actually runs
+
+`~/Library/LaunchAgents/com.jeff.orb-quarterly-review.plist`:
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+  "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.jeff.orb-quarterly-review</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/bin/bash</string>
+    <string>/Users/YOUR_USERNAME/orb-quarterly-review-run.sh</string>
+  </array>
+  <key>StartCalendarInterval</key>
+  <array>
+    <dict><key>Month</key><integer>1</integer><key>Day</key><integer>1</integer><key>Hour</key><integer>8</integer><key>Minute</key><integer>0</integer></dict>
+    <dict><key>Month</key><integer>1</integer><key>Day</key><integer>2</integer><key>Hour</key><integer>8</integer><key>Minute</key><integer>0</integer></dict>
+    <dict><key>Month</key><integer>1</integer><key>Day</key><integer>3</integer><key>Hour</key><integer>8</integer><key>Minute</key><integer>0</integer></dict>
+    <dict><key>Month</key><integer>4</integer><key>Day</key><integer>1</integer><key>Hour</key><integer>8</integer><key>Minute</key><integer>0</integer></dict>
+    <dict><key>Month</key><integer>4</integer><key>Day</key><integer>2</integer><key>Hour</key><integer>8</integer><key>Minute</key><integer>0</integer></dict>
+    <dict><key>Month</key><integer>4</integer><key>Day</key><integer>3</integer><key>Hour</key><integer>8</integer><key>Minute</key><integer>0</integer></dict>
+    <dict><key>Month</key><integer>7</integer><key>Day</key><integer>1</integer><key>Hour</key><integer>8</integer><key>Minute</key><integer>0</integer></dict>
+    <dict><key>Month</key><integer>7</integer><key>Day</key><integer>2</integer><key>Hour</key><integer>8</integer><key>Minute</key><integer>0</integer></dict>
+    <dict><key>Month</key><integer>7</integer><key>Day</key><integer>3</integer><key>Hour</key><integer>8</integer><key>Minute</key><integer>0</integer></dict>
+    <dict><key>Month</key><integer>10</integer><key>Day</key><integer>1</integer><key>Hour</key><integer>8</integer><key>Minute</key><integer>0</integer></dict>
+    <dict><key>Month</key><integer>10</integer><key>Day</key><integer>2</integer><key>Hour</key><integer>8</integer><key>Minute</key><integer>0</integer></dict>
+    <dict><key>Month</key><integer>10</integer><key>Day</key><integer>3</integer><key>Hour</key><integer>8</integer><key>Minute</key><integer>0</integer></dict>
+  </array>
+  <key>StandardOutPath</key>
+  <string>/Users/YOUR_USERNAME/orb-quarterly-review.log</string>
+  <key>StandardErrorPath</key>
+  <string>/Users/YOUR_USERNAME/orb-quarterly-review-err.log</string>
+  <key>RunAtLoad</key>
+  <false/>
+</dict>
+</plist>
+```
+```bash
+launchctl load ~/Library/LaunchAgents/com.jeff.orb-quarterly-review.plist
+```
+
+**Why the 1st through 3rd instead of just the 1st:** if the 1st (and
+possibly the 2nd) of the quarter falls on a weekend or market holiday,
+the wrapper skips it and whichever of those three days is the real first
+trading day of the quarter is the one that actually runs and writes the
+marker.
 
 ## Mac — launchd (recommended, intraday polling)
 
@@ -275,7 +365,7 @@ change the setup:
   rather than `~/orb-trade-log.md`: a cloud routine has nowhere durable to
   keep a local file across separate invocations, but Drive persists fine.
 
-Set up as **two separate routines**:
+Set up as **three separate routines**:
 1. **ORB Check** — trigger: API. Connect a repo containing this
    `public-trader/` folder; instructions tell Claude to read `SKILL.md`
    and everything under `references/` from that repo and follow it for
@@ -284,11 +374,22 @@ Set up as **two separate routines**:
 2. **Weekly Review** — trigger: Schedule, first trading day of the week,
    8:00 AM CT. Same repo connection; instructions point at
    `references/trade-log.md` § Weekly Review instead.
+3. **Quarterly Review** — trigger: Schedule, first trading day of each
+   calendar quarter (Jan/Apr/Jul/Oct), 8:00 AM CT. Same repo connection;
+   instructions point at `references/trade-log.md` § Quarterly Review.
 
-Connectors needed on both: **Public** (trading) and **Twelve Data** (5-min
-bars) at minimum; the weekly review additionally needs **Google Drive**
-(reading the trade log) — the ORB Check routine needs it too, since it
-writes the daily log entry as part of Step 8. No Notifications tab setup
-is needed for exit alerts — Public itself sends order-fill notifications
-for every leg (entry, TP, SL) automatically; see
-`references/public-submission.md` § Exit Alerts.
+There is no Monthly Review — the log lives in a single Google Doc read
+fresh on every review run, so a monthly cadence added nothing a weekly
+and a quarterly cadence don't already cover between them. If a routine's
+stored prompt still asks for a "Monthly Review" or reads from
+`~/orb-trade-log.md`, that's leftover text from before this skill moved
+its log to Google Drive — update the routine's prompt to reference the
+Weekly Review and Quarterly Review sections above instead.
+
+Connectors needed on all three: **Public** (trading) and **Twelve Data**
+(5-min bars) at minimum; the weekly and quarterly review routines
+additionally need **Google Drive** (reading the trade log) — the ORB
+Check routine needs it too, since it writes the daily log entry as part
+of Step 8. No Notifications tab setup is needed for exit alerts — Public
+itself sends order-fill notifications for every leg (entry, TP, SL)
+automatically; see `references/public-submission.md` § Exit Alerts.

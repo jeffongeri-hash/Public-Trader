@@ -19,15 +19,19 @@ description: >
   local filesystem dependency) with full entry/exit rationale and
   post-trade analysis; a separate WEEKLY REVIEW run (first trading day of
   each week) reads that log and recommends whether to keep the strategy
-  as-is or adjust it. This is NOT the old 16-ticker 5-strategy swing
-  matrix — that content was removed from this skill entirely (it belonged
-  to a different context). ALWAYS trigger on: "run the ORB breakout
-  check", "check opening range", "SPY breakout", "opening range
-  breakout", "run the breakout scan", "check for a breakout", "run the
-  weekly review", "ORB weekly review", "how's the breakout strategy
-  doing", or any request about this SPY/SPX 0DTE strategy. Runs on a
-  5-minute cadence during market hours on weekdays, plus one weekly
-  review run.
+  as-is or adjust it, and a separate QUARTERLY REVIEW run (first trading
+  day of each calendar quarter) does the same over a much larger sample.
+  There is no monthly review — weekly and quarterly are the only review
+  cadences. This is NOT the old 16-ticker 5-strategy swing matrix — that
+  content was removed from this skill entirely (it belonged to a
+  different context). ALWAYS trigger on: "run the ORB breakout check",
+  "check opening range", "SPY breakout", "opening range breakout", "run
+  the breakout scan", "check for a breakout", "run the weekly review",
+  "ORB weekly review", "run the quarterly review", "ORB quarterly
+  review", "how's the breakout strategy doing", or any request about
+  this SPY/SPX 0DTE strategy. Runs on a 5-minute cadence during market
+  hours on weekdays, plus one weekly review run and one quarterly review
+  run.
 ---
 
 # Public Trader Skill — Opening Range Breakout (0DTE)
@@ -236,6 +240,22 @@ strategy doing."
 
 See `references/trade-log.md` for the full output format.
 
+## Quarterly Review
+
+**Separate workflow, separate trigger** — runs once on the first trading
+day of each calendar quarter (Jan/Apr/Jul/Oct — see
+`references/schedule-setup.md` for the schedule), or on demand when Jeff
+asks "run the quarterly review." Same process as the Weekly Review above,
+scaled to a full quarter: read the "ORB Trade Log" Google Doc filtered to
+the prior quarter, compute the stats in `references/trade-log.md` §
+Quarterly Review — What It Computes, and end with an explicit
+recommendation. A quarter's sample (~60-65 trading days) is large enough
+to make real parameter-adjustment calls, not just directional signal.
+There is no monthly review — weekly and quarterly are the only cadences
+this skill runs.
+
+See `references/trade-log.md` for the full output format.
+
 ---
 
 ## Error Handling
@@ -255,3 +275,5 @@ See `references/trade-log.md` for the full output format.
 | Google Drive connector not linked | Report the day's outcome in the run summary anyway, flag that logging failed, tell Jeff to connect it |
 | "ORB Trade Log" doc doesn't exist yet | Create it fresh on first write, no error |
 | Weekly review requested but log is empty/missing for the period | Say so plainly, don't fabricate a review |
+| Quarterly review requested but log is empty/missing for the period | Say so plainly, don't fabricate a review |
+| A run asks for a "Monthly Review" or reads `~/orb-trade-log.md` | Stale instruction from before the Google Drive rebuild — there is no monthly cadence and no local log file. Run the Weekly or Quarterly Review instead (whichever the request is closer to) and flag to Jeff that the routine's stored prompt needs updating |

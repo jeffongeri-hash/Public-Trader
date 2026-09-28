@@ -165,3 +165,80 @@ Recommendation: [keep as-is / specific change / not enough data yet] — [reason
 
 This weekly review is a SEPARATE run from the 5-minute intraday polling —
 see `references/schedule-setup.md` for its own trigger.
+
+---
+
+## Quarterly Review
+
+### When
+First trading day of each calendar quarter (Jan, Apr, Jul, Oct), 8:00 AM
+CT — before the intraday polling starts — reviewing the just-completed
+prior quarter (e.g. the Jan run reviews Oct 1–Dec 31). If a manual run is
+requested mid-quarter, review whatever partial data exists for the
+current quarter and say so explicitly — don't wait silently for
+quarter-end.
+
+### What It Reads
+The `ORB Trade Log` Google Doc, filtered to the review period (the prior
+calendar quarter, or the partial current quarter for an on-demand
+mid-quarter run). If the doc is missing or has no entries for that
+period, say so and stop — don't fabricate a review from nothing.
+
+### What It Computes
+Same categories as the Weekly Review (see above), aggregated across the
+full quarter instead of a single week:
+```
+- Total trading days in the quarter vs. days with a confirmed trade
+  (trade frequency over a much larger sample than any single week)
+- Win rate PER LOT: Lot A TP-A/SL-A/EOD-close split and the same for
+  Lot B, aggregated across the quarter
+- CALL vs PUT split | SPY vs SPX split
+- Average P&L per trade and total P&L for the quarter
+- Average time held per trade
+- Fakeout rate (WATCHING events that never confirmed) across the quarter
+- How often Lot A's +25% target is reached but Lot B's +40% target is not
+- Projection accuracy (measured move vs. IV expected move) across the
+  quarter — this sample size is large enough to say which method is
+  actually more reliable, not just directionally suggestive
+- Week-over-week trend across the quarter's own weekly reviews, if any
+  were run and logged — is win rate/P&L drifting, or stable?
+- Comparison to the prior quarter's own numbers, if that data exists —
+  is the strategy improving, degrading, or flat quarter over quarter?
+- Any recurring pattern across the quarter's "post-trade analysis" notes
+```
+A full quarter (~60-65 trading days) is a large enough sample to draw
+real conclusions from — this is where parameter-adjustment calls should
+actually get made, not off a single week's 1-5 trades.
+
+### What It Recommends
+Same structure as the Weekly Review's recommendation, but with the
+standing to be more decisive given the larger sample:
+- **Keep as-is**, or
+- **Adjust a specific parameter** (confirmation bar count, budget, delta
+  target, TP/SL percentages, opening range window length) with the
+  reasoning tied directly to the quarter's data, or
+- **Something structural is off** (e.g., trade frequency too low to be
+  worth running, or SPX is never actually usable given the budget), or
+- **Not enough data yet** — if fewer than ~10 trades occurred across the
+  quarter, say so explicitly rather than forcing a confident call.
+
+Write this as a clear, standalone summary Jeff can act on without having
+to re-derive the stats himself or scroll back through 13 weeks of
+individual entries.
+
+### Output Format
+```
+📊 QUARTERLY REVIEW — Q[N] [Year] ([start date] - [end date])
+Trading days: [N] | Trades taken: [N] ([X]% of days)
+Win rate: [N] TP / [N] SL / [N] EOD close ([X]% win rate)
+CALL/PUT split: [N]/[N] | SPY/SPX split: [N]/[N]
+Total P&L: $[amount] | Avg per trade: $[amount] | Avg hold time: [X] min
+Fakeout rate (WATCHING → never confirmed): [N] of [N] watching events ([X]%)
+Quarter-over-quarter: [trend vs. prior quarter, or "first tracked quarter" if none]
+
+Recommendation: [keep as-is / specific change / not enough data yet] — [reasoning]
+```
+
+This quarterly review is a SEPARATE run from both the 5-minute intraday
+polling and the weekly review — see `references/schedule-setup.md` for
+its own trigger.
