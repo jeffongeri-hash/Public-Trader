@@ -114,7 +114,7 @@ two lots:
   tier2_qty = N - tier1_qty   # 0 if N == 1
 
 DELAY — do not place STEP B / STEP C at entry. Record the fill time and
-place both stops on the first run at least 10 minutes after the fill (see
+place both stops on the first run at least 5 minutes after the fill (see
 config.md § Delayed Stop-Loss). If by then the option bid is already below
 the stop price, skip the STOP_LIMIT, report it, and SELL LIMIT at the bid.
 

@@ -36,7 +36,7 @@ Opening Range: n/a | Final status: no trades in account history
 **Exit — Lot B (1 ct):** SL-B hit, exit $0.69 at 10:28 (−31%); P&L −$31.00
 
 **Blended outcome:** held 13 min. Net P&L −$90.67 after fees (−30%).
-**Post-trade analysis:** full stop-out within 13 minutes of entry — the only trade this week that followed the rules. Prompted the 10-minute delayed-stop change (10/5).
+**Post-trade analysis:** full stop-out within 13 minutes of entry — the only trade this week that followed the rules. Prompted the delayed-stop change (10/5, now 5 minutes after entry).
 
 ## 2026-10-01 — BEARISH BREAKDOWN (reconstructed)
 

@@ -81,7 +81,7 @@ Step 5 — If breakout: project a realistic SPY target for the rest of the
          target (delta >= 0.40), size contracts to $400 budget
 Step 6 — Submit BUY (live), split into Lot A/Lot B. Each lot's own
          stop-loss (-30%) is submitted as a resting SELL STOP_LIMIT DAY
-         order 10 MINUTES AFTER the entry fill (not immediately — see
+         order 5 MINUTES AFTER the entry fill (not immediately — see
          Step 6) — take-
          profit (Lot A +25%, Lot B +40%) is tracked as a target to watch,
          not a second resting order (the account has no OCO support and
@@ -155,8 +155,8 @@ the bounded candidates.
 
 BUY the option, split into Lot A (majority) and Lot B (runner). **Do not
 place the stop-losses at entry.** Record the fill time; each lot's
-stop-loss is placed on the first run at least 10 minutes after that fill
-(normally two 5-minute runs later). Reason: live trades on 9/29–10/1 were
+stop-loss is placed on the first run at least 5 minutes after that fill
+(normally the very next 5-minute run). Reason: live trades on 9/29–10/1 were
 stopped out or closed early within minutes of entry; the delay keeps
 normal entry noise from triggering the stop. When that run arrives, submit
 each lot's own stop-loss (-30%) as a resting **SELL STOP_LIMIT**
@@ -170,8 +170,8 @@ own TP+SL pair would already exceed capacity and block the other lot's
 exits entirely. See `references/public-submission.md` § ORB Submission
 Sequence and § TP Monitoring. Every call here is a real fill — no approval
 step. **Tradeoff to state in every trade's run summary:** during the first
-10 minutes the position has no resting stop. Step 6.5's TP monitoring still
-runs; if at the 10-minute run the option bid is already below the -30%
+5 minutes the position has no resting stop. Step 6.5's TP monitoring still
+runs; if at the 5-minute run the option bid is already below the -30%
 stop price, do not place a STOP_LIMIT (it would fill immediately) — report
 it and SELL LIMIT the lots at the bid instead. After each SL is placed, confirm via `get_order` that it rests as
 `NEW`, not `FILLED`. No custom alert needed beyond that: Public's own

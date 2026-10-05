@@ -183,7 +183,7 @@ month, plus:
 - Entry-time buckets (before 10:30 ET / 10:30-12:00 / after 12:00): which
   window produced the winners and the stop-outs
 - Rule adherence: how many trades followed the tiered exit and the delayed
-  (10-minute) stop exactly vs. deviated (manual or early exits)
+  (5-minute) stop exactly vs. deviated (manual or early exits)
 - Fees as % of gross P&L
 - Month P&L as % of account value at start of month
 ```
