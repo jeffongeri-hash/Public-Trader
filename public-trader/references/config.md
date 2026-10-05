@@ -174,6 +174,13 @@ Each lot's SL is independent of the other lot's SL — closing one lot never
 touches the other's resting order. All resting orders are
 `time_in_force="DAY"`.
 
+## Delayed Stop-Loss (added 10/5/26)
+Stop-losses are NOT placed at entry. They are submitted on the first run at
+least 10 minutes after the entry fill, because trades on 9/29–10/1 exited
+within minutes of entry. Until then only TP monitoring is active. If the
+bid is already below the stop price at that point, don't place a
+STOP_LIMIT (it would fill immediately) — report it and SELL LIMIT at the bid.
+
 ## End-of-Day Forced Close
 **2:45 PM CT (3:45 PM ET):** if either lot still has an open position
 (neither its TP nor its SL has filled), submit a MARKET SELL to close that

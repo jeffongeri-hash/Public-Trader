@@ -1,23 +1,21 @@
 # Trade Log & Weekly Review Reference
 
-## Log Storage: Google Drive (not a local file)
-The trade log lives in a **Google Doc**, not `~/orb-trade-log.md` on any
-particular machine — this strategy may run from a local Mac (launchd) or
-from a Claude Code cloud Routine with no persistent local filesystem
-between runs, so the log needs to live somewhere both can reach.
+## Log Storage: `orb-trade-log.md` in this repo
+The log is a markdown file at the repo root, `orb-trade-log.md` (newest
+entry last). A cloud routine has no persistent filesystem, so the file is
+committed and pushed. (The old Google Doc approach was dropped: the Drive
+connector can only rename/move files, not write content.)
 
-**Doc name:** `ORB Trade Log` (create it once via `Google_Drive__create_file`
-if it doesn't already exist; search for it by name first via
-`Google_Drive__search_files` before assuming it's missing).
+**Write pattern (2:45 PM CT run, once the day's outcome is final):**
+1. Read `orb-trade-log.md` (create it with a `# ORB Trade Log` heading if
+   missing).
+2. Append the day's entry (templates below).
+3. `git add orb-trade-log.md && git commit -m "Log ORB result [YYYY-MM-DD]"`
+4. `git push -u origin <current branch>` — retry up to 4 times (2s, 4s, 8s,
+   16s) on network errors. Never create a PR for this.
 
-**Write pattern (read-modify-write, since Drive has no true append):**
-1. `Google_Drive__read_file_content` on the doc to get current contents
-2. Append the new entry's markdown text to the end
-3. `Google_Drive__update_file` with the full updated content
-
-This happens automatically as part of every day's 2:45 PM CT run — logging
-is not optional or a "remember to do this later" step. Every trading day
-gets an entry written to the Doc before that run's summary is displayed.
+Logging is not optional — every trading day gets an entry before that
+run's summary is displayed. If the push fails, say so in the summary.
 
 ## What Gets Logged
 
@@ -98,7 +96,7 @@ whatever partial data exists for the current week and say so explicitly —
 don't wait silently for week-end.
 
 ### What It Reads
-The `ORB Trade Log` Google Doc, filtered to the review period (the prior
+`orb-trade-log.md`, filtered to the review period (the prior
 Mon–Fri). If the doc is missing or has no entries for that week, say so
 and stop — don't fabricate a review from nothing.
 
@@ -162,6 +160,57 @@ Fakeout rate (WATCHING → never confirmed): [N] of [N] watching events ([X]%)
 
 Recommendation: [keep as-is / specific change / not enough data yet] — [reasoning]
 ```
+
+---
+
+## Monthly Review
+
+### When
+First trading day of each month (or on demand), reviewing the prior
+calendar month from `orb-trade-log.md`. If the log is missing or has no
+entries for that month, say so and stop — never fabricate a review.
+
+### What It Computes
+Everything in the weekly review (trade frequency, per-lot TP/SL/EOD
+outcomes, CALL/PUT and SPY/SPX splits, total and average P&L, average hold
+time, fakeout rate, runner-vs-Lot-A, projection accuracy), over the whole
+month, plus:
+```
+- Week-by-week P&L (so one bad week is visible against the month)
+- Win rate and average win vs. average loss (payoff ratio) — and expectancy
+  per trade = win% x avg win - loss% x avg loss
+- Max drawdown across the month's trades (running P&L peak to trough)
+- Entry-time buckets (before 10:30 ET / 10:30-12:00 / after 12:00): which
+  window produced the winners and the stop-outs
+- Rule adherence: how many trades followed the tiered exit and the delayed
+  (10-minute) stop exactly vs. deviated (manual or early exits)
+- Fees as % of gross P&L
+- Month P&L as % of account value at start of month
+```
+Flag sample size honestly: under ~20 trades is directional only.
+
+### What It Recommends
+Same as the weekly review: keep as-is, adjust one specific parameter tied
+to the data, flag something structural, or "not enough data yet". Weigh
+patterns that persisted across multiple weeks above single-week noise.
+
+### Output Format
+```
+📅 MONTHLY REVIEW — [Month YYYY]
+Trading days: [N] | Trades taken: [N] ([X]% of days)
+Per-lot: A [N] TP / [N] SL / [N] EOD | B [N] TP / [N] SL / [N] EOD
+Win rate: [X]% | Avg win $[x] | Avg loss $[y] | Expectancy $[z]/trade
+CALL/PUT: [N]/[N] | SPY/SPX: [N]/[N]
+Total P&L: $[amount] ([X]% of starting balance) | Max drawdown: $[amount]
+Weekly P&L: W1 $[a] | W2 $[b] | W3 $[c] | W4 $[d]
+Entry-time buckets: [summary]
+Rule adherence: [N] of [N] trades followed the rules
+Fakeout rate: [N] of [N] watching events ([X]%)
+
+Recommendation: [keep / specific change / not enough data] — [reasoning]
+```
+
+---
 
 This weekly review is a SEPARATE run from the 5-minute intraday polling —
 see `references/schedule-setup.md` for its own trigger.

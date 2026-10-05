@@ -21,7 +21,7 @@ review run**.
 ## Weekly Review Schedule
 
 **First *trading* day of each week, 8:00 AM CT** — normally Monday,
-reviewing the prior Mon-Fri from the "ORB Trade Log" Google Doc. Uses the
+reviewing the prior Mon-Fri from `orb-trade-log.md` in the repo. Uses the
 same holiday-skip logic as the intraday script, plus an "already ran this
 week" marker so it doesn't fire twice if Monday is a holiday and Tuesday
 ends up being the actual first trading day of the week.
@@ -271,9 +271,9 @@ change the setup:
   `claude -p` directly. The weekly review's cadence (once a week) is well
   above the 1-hour floor, so it can use the native Schedule trigger as-is.
 - **No persistent local filesystem between runs** — this is exactly why
-  the trade log lives in a Google Doc (see `references/trade-log.md`)
-  rather than `~/orb-trade-log.md`: a cloud routine has nowhere durable to
-  keep a local file across separate invocations, but Drive persists fine.
+  the trade log lives in `orb-trade-log.md` at the repo root (see
+  `references/trade-log.md`) and is committed and pushed by the 2:45 PM CT
+  run, so it persists across separate cloud invocations.
 
 Set up as **two separate routines**:
 1. **ORB Check** — trigger: API. Connect a repo containing this
@@ -285,10 +285,9 @@ Set up as **two separate routines**:
    8:00 AM CT. Same repo connection; instructions point at
    `references/trade-log.md` § Weekly Review instead.
 
-Connectors needed on both: **Public** (trading) and **Twelve Data** (5-min
-bars) at minimum; the weekly review additionally needs **Google Drive**
-(reading the trade log) — the ORB Check routine needs it too, since it
-writes the daily log entry as part of Step 8. No Notifications tab setup
+Connectors needed on both: **Public** (trading and 5-min bars) and write
+access to this repo (the 2:45 PM CT run commits the daily log entry in
+Step 8). Google Drive and Twelve Data are no longer used. No Notifications tab setup
 is needed for exit alerts — Public itself sends order-fill notifications
 for every leg (entry, TP, SL) automatically; see
 `references/public-submission.md` § Exit Alerts.

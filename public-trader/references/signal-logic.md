@@ -9,8 +9,9 @@ content belonged to a different skill/conversation and has been removed.
 
 ```
 Fetch SPY intraday bars for 9:30–10:00 AM ET (8:30–9:00 AM CT) via
-Twelve Data:get_time_series(symbol="SPY", interval="5min",
-  start_date=<today 9:30 ET>, end_date=<today 10:00 ET>)
+Public:get_price_history(symbol="SPY", period="DAY",
+  aggregation="FIVE_MINUTES", trading_session_toggle="REGULAR_HOURS")
+→ use the six bars stamped 9:30, 9:35, ... 9:55 ET
 
 OR_high = max(high) across those bars
 OR_low  = min(low) across those bars
@@ -22,8 +23,9 @@ recompute mid-day, the range is fixed once the first 30 minutes are over.
 ## Step 2 — Fetch Previous Day High/Low (context only)
 
 ```
-Fetch SPY's prior trading day daily bar via Twelve Data:get_time_series
-(interval="1day", outputsize=2) → use the second-most-recent row.
+Fetch SPY's prior trading day daily bar via Public:get_price_history
+(symbol="SPY", period="WEEK", aggregation="ONE_DAY") → use the
+second-most-recent row.
 
 prev_day_high, prev_day_low
 ```
@@ -46,9 +48,10 @@ public-submission.md § End-of-Day Close).
 
 ```
 Fetch the most recent completed 5-minute SPY bars via
-Twelve Data:get_time_series(symbol="SPY", interval="5min", outputsize=3)
-— discard the currently-forming bar (if the API includes it), use the two
-most recently CLOSED bars.
+Public:get_price_history(symbol="SPY", period="DAY",
+aggregation="FIVE_MINUTES", trading_session_toggle="REGULAR_HOURS")
+— the final entry is often a still-forming partial bar (timestamp not on a
+5-minute boundary); discard it and use the two most recently CLOSED bars.
 
 last_bar, prior_bar = the two most recent completed 5-min closes
 
