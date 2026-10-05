@@ -55,3 +55,6 @@ Opening Range: n/a | Final status: no trades in account history
 
 ## 2026-10-02 — NO TRADE
 Opening Range: $769.07-$772.09 | Final status: NO BREAKOUT (last bars closed $771.47, $771.93 inside range at 9:18 AM CT check)
+
+## Entry-quality notes (started 10/5)
+From this week's reconstructed trades, the three entries so far were at 11:38, 10:15 and 10:17 ET; only the 10:15 call lost (−30% in 13 min). Candidate entry filters to start collecting data on (not live rules yet): volume on the confirmation bars vs. the opening-range average, SPY side of VWAP, close distance beyond the boundary, and range width. Live entries from 10/5 onward log these fields, so the first real check is after ~5 logged trades.

@@ -205,8 +205,11 @@ errors). Append:
   rationale, exit outcome, P&L, and honest post-trade analysis
 - **No-trade day:** one-line entry — opening range and final status
 
-See `references/trade-log.md` for the exact template and commit
-pattern. Every trading day gets an entry, win or loss or
+Every entry order sent is logged with its entry snapshot (SPY distance
+beyond the range, volume on the confirmation bars, VWAP side, range width,
+timing), and every trade day ends with a **Next-day entry improvement**
+block (entry grade, what would have made it stronger, one change to test).
+See `references/trade-log.md` for the exact template and commit pattern. Every trading day gets an entry, win or loss or
 nothing — this is a complete record, not a highlight reel, and it's what
 the weekly review runs against.
 

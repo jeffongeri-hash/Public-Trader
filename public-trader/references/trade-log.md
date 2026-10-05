@@ -23,6 +23,11 @@ run's summary is displayed. If the push fails, say so in the summary.
 weekly review can compute real trade-frequency stats (how often a
 breakout even confirms vs. how many days go by with nothing).
 
+### Every order sent gets logged
+If an entry order is sent but not filled, cancelled, or rejected, log that
+too (time, limit price, what happened) — a missed or failed entry is data
+for the entry review.
+
 ### No-trade day (one line)
 ```
 ## [YYYY-MM-DD] — NO TRADE
@@ -39,6 +44,15 @@ contains the complete outcome, not a half-finished one:
 **Opening Range:** $[OR_low] - $[OR_high]
 **Confirmation bars:** [HH:MM] close $[x] and [HH:MM] close $[y], both [above/below] the range
 **Prior day range (context):** $[prev_low] - $[prev_high]
+
+**Entry snapshot (log at order time — this is the data the next-day review runs on):**
+- Order sent: [HH:MM:SS ET], [BUY/limit price], fill [price] at [HH:MM:SS]
+- SPY at entry: $[x] — [N.NN] beyond the broken boundary ([OR_high/OR_low])
+- Opening range width: $[OR_high - OR_low] ([X]% of price); gap vs prior close: [+/-X]%
+- Volume on the 2 confirmation bars vs. the average of the 6 opening-range bars: [x]x
+- SPY vs session VWAP at entry (approximate from bars): [above/below by $x]
+- Time of entry vs. 10:00 ET: [N] min after range close
+- Stop-loss placed: [HH:MM] ([N] min after fill), stop $[x]; option bid at that moment $[y]
 
 **Entry decision:**
 - Underlying chosen: [SPY/SPX] — [reason: e.g. "SPY fit budget at $X, SPX ATM premium was $Y, over budget"]
@@ -80,6 +94,22 @@ strike to it help or cost anything relative to what an unbounded pick
 would've done? Anything about this trade that should inform the weekly
 review.]
 ```
+
+**Next-day entry improvement** (required on every trade day, written after
+the outcome is final):
+```
+- Entry grade: [STRONG / OK / WEAK] — [one line why, from the snapshot above]
+- What would have made this entry stronger: [e.g. waiting for volume > 1.2x,
+  requiring SPY on the right side of VWAP, skipping a narrow-range day,
+  requiring a close N cents beyond the boundary, entering after a retest]
+- Hindsight check: did the rule you're proposing, applied to today (and any
+  earlier logged trades), keep the winners and avoid the losers? [yes/no/mixed — name the trades]
+- ONE concrete change to test tomorrow: [specific, or "none — keep rules"]
+```
+A proposal is only written into the skill's rules after it has held across
+several logged trades (at least ~5) — until then it stays a note here, and
+can be tracked as an extra snapshot field. Don't change live rules off one
+trade.
 
 Log every trade — winners and losers both get the full template. The point
 is an honest record, not a highlight reel.
