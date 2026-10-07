@@ -1,199 +1,154 @@
 # Config Reference — Opening Range Breakout (ORB), SPY/SPX 0DTE
 
+> **v2 — revised 10/7/26.** Review of live results Sep 18 – Oct 5 (−$500 on
+> $1,000) found the trigger itself was sound but execution was not: hourly
+> runs entered late or missed signals entirely (10/6), the one-trade gate
+> allowed re-entries after a stop-out (9/21, 9/25 — the 9/25 re-entry alone
+> lost $329), and winners averaged +$31 vs losers −$164. v2 keeps the trigger
+> and fixes execution, exits and filtering. Every parameter below is the
+> single source of truth — the other files reference these names.
+
 ## Connector Account
 Public.com account **5OI27877 (CASH, options Level 2, BUY_AND_SELL)**.
 Hardcode this account_id in every Public tool call in this skill.
 Account 5LG81210 (MARGIN) runs a SEPARATE playbook — never touch it from
 this skill.
 
-## Strategy Summary
-Pure Opening Range Breakout on SPY, trading same-day-expiration (0DTE)
-options on whichever of SPY/SPX fits the budget. This is NOT the old
-16-ticker/5-strategy swing matrix — that content has been fully removed
-from this skill (it belonged to a different conversation/skill).
+## Mode
+`MODE = LIVE` — orders execute for real. Set to `PAPER` to run the full
+session (signals, filters, simulated fills at the quoted ask/bid, simulated
+exits) and log it with a `[PAPER]` tag, without calling `place_order`,
+`cancel_order` or `cancel_and_replace_order`.
 
-## Underlying for the breakout signal
-**SPY only.** The opening range and breakout trigger are always computed
-from the SPY chart, regardless of which underlying's options end up being
-bought.
+## Data Sources (all via the Public connector)
+| Need | Call |
+|---|---|
+| SPY 5-min bars (today) | `get_price_history(symbol="SPY", period="DAY", aggregation="FIVE_MINUTES", trading_session_toggle="REGULAR_HOURS")` |
+| SPY daily bars (prior day H/L, 63-day high — YEAR is too large for a tool result) | `get_price_history(symbol="SPY", period="QUARTER", aggregation="ONE_DAY")` |
+| SPY / option live quote | `get_quotes(..., instrument_type="EQUITY" / "OPTION")` |
+| VIX | `get_quotes(symbols=["VIX"], instrument_type="INDEX")` — `last` and `previousClose` |
+
+Twelve Data is no longer used (it isn't connected to the routine).
+
+**Completed-bar rule:** a 5-min bar stamped `HH:MM` is complete only once
+`now ≥ HH:MM + 5 min`. The API returns the forming bar too (often with an
+odd timestamp like `10:23`) — always drop it. Never evaluate a forming bar.
 
 ## Opening Range Window
-- **9:30–10:00 AM ET (8:30–9:00 AM CT)** — first 30 minutes of the regular session
-- OR_high = highest high in that window
-- OR_low = lowest low in that window
+- **9:30–10:00 ET** — the six bars stamped 09:30 … 09:55
+- `OR_high` = max high, `OR_low` = min low, `OR_mid` = (high+low)/2
+- `OR_width_pct` = (OR_high − OR_low) / OR_mid
 
-## Previous Day High/Low
-Fetched and displayed as **context only** — NOT part of the trigger condition.
-Shows Jeff where the opening range sits relative to yesterday's range.
+## Breakout Trigger — unchanged from v1 (2-bar confirmation)
+Two consecutive **completed** 5-min bars both close above `OR_high` → CALL;
+both below `OR_low` → PUT. In the Sep 25 – Oct 6 replay this rule, entered
+on time, reached +$0.75 SPY before −$0.60 on 6 of 8 days; 1-bar and
+15-minute-range variants did worse (3–5 of 8). Don't loosen it.
 
-## Breakout Trigger — requires 2-bar confirmation on the 5-minute chart
-```
-Using completed 5-minute SPY candles (not the live/forming price):
+**Scan every completed bar since 10:00, not just the latest two.** The
+first bar pair that confirms is THE signal for the day (`signal_bar` = the
+second bar of the pair, `signal_close` = its close). Nothing later can
+create a second signal.
 
-if last_closed_5min_bar.close > OR_high AND prior_5min_bar.close > OR_high
-    → BULLISH BREAKOUT CONFIRMED → buy a CALL
+## Entry Window & No-Chase Rule
+- `ENTRY_START = 10:05 ET` (earliest possible confirmation is the 10:05 bar)
+- `ENTRY_CUTOFF = 11:30 ET` — no new entries after this. Breakouts that
+  hold past midday faded on 6 of 8 sample days.
+- `MAX_SIGNAL_AGE = 1 bar` — enter only if `signal_bar` is the newest or
+  second-newest completed bar.
+- `MAX_CHASE_PCT = 0.10%` — enter only if live SPY is within 0.10% of
+  `signal_close` in the trade's direction and still beyond the OR boundary.
+- If the signal is older, or price has run past the chase limit, or price
+  is back inside the range → status `MISSED`, log it, **no trade today**.
 
-if last_closed_5min_bar.close < OR_low AND prior_5min_bar.close < OR_low
-    → BEARISH BREAKDOWN CONFIRMED → buy a PUT
+## Entry Filters (all must pass; any fail → `SKIPPED — <filter>`, no trade today)
+| Filter | Rule |
+|---|---|
+| Macro calendar | See § Macro Event Rules |
+| OR width | `OR_width_pct ≤ 0.40%` (≤ 0.30% on a data day). Wide ranges = chop |
+| VWAP | CALL needs live SPY > session VWAP; PUT needs SPY < VWAP. VWAP = Σ(typical price × volume) / Σ volume over today's completed bars, typical = (H+L+C)/3 |
+| VIX regime | No trade if VIX `last > 30`, or VIX up > 10% vs `previousClose`. No CALL if VIX is up > 5% on the day |
+| Overhead / underfoot level | CALL: skip if the prior-day high or the 63-day high sits above entry by less than `$1.00` (target is capped). PUT: same with the prior-day low below entry. A level price has already cleared doesn't count |
+| Budget | At least one contract must cost ≤ `BUDGET` |
 
-if ONLY the last_closed_5min_bar (the newest one) is beyond a boundary,
-and prior_5min_bar was not
-    → WATCHING, no trade yet — log it, re-check next run
+## Macro Event Rules
+Checked once per session before 10:00 ET (see SKILL.md Phase 0).
+| Event (today, ET) | Rule |
+|---|---|
+| FOMC decision day | **No trade** (2:00 PM decision dominates the tape). 2026 meetings — verify against federalreserve.gov: Jan 27–28, Mar 17–18, Apr 28–29, Jun 16–17, Jul 28–29, Sep 15–16, **Oct 27–28**, Dec 8–9 (decision on the 2nd day) |
+| CPI, PPI, Nonfarm Payrolls, PCE, Retail Sales (8:30 AM release) | "Data day" — trade allowed only if `OR_width_pct ≤ 0.30%` |
+| Fed Chair speaking 10:00–11:30 ET | No trade |
+| NVDA / AAPL / MSFT / AMZN / GOOGL / META / TSLA reported after yesterday's close | Treat as a data day |
+| Monthly opex (3rd Friday), quarter-end, half-day sessions | Treat as a data day; half-days: no trade |
+If the calendar lookup fails, proceed as a normal day but flag
+`macro check unavailable` in the summary and log.
 
-if prior_5min_bar had breached but last_closed_5min_bar is back inside
-the range → that breach is stale/reverted → NO BREAKOUT, not WATCHING
+## Underlying Selection (SPY vs SPX) — unchanged
+Compare 0DTE premium for both; if both fit `BUDGET` use SPY; if only one
+fits use that; if neither, skip and log both costs. SPX will almost never
+fit at this budget.
 
-else → no trade, no action
-```
-A single tick or single 5-min close beyond the range is NOT enough — both
-of the two most recently completed 5-minute bars must close beyond the
-same boundary. This is a confirmation filter to avoid single-bar fakeouts
-at the range edge. `WATCHING` only applies when the newest bar is the one
-that just breached — a reverted older breach doesn't linger as `WATCHING`.
-
-Prior-day H/L is still not part of this condition — opening range alone
-(with 2-bar confirmation) triggers.
-
-## One Trade Per Day
-Once a breakout fires and an order is placed, no further entries the same
-day even if price re-crosses back the other way. Check `get_orders` /
-`get_portfolio` for an existing same-day options fill from this strategy
-before allowing a new entry.
-
-## Underlying Selection for the Actual Option (SPY vs SPX)
-1. Get 0DTE ATM premium for both SPY and SPX in the breakout direction.
-2. contract_cost = premium × 100 for either (both are 100-multiplier).
-3. If both fit under $400 → default to **SPY** (tighter spreads, more liquid).
-4. If only one fits under $400 → use that one.
-5. If neither fits under $400 → skip the trade, log why (this will be rare —
-   SPX 0DTE ATM premiums are typically far above $400, so SPY will almost
-   always be the one used in practice).
-
-## Price Target Projection (informs strike selection only — added 9/18/26)
-Before picking a strike, project a realistic SPY target for the rest of the
-day, using the more conservative (closer to current price) of two methods:
-
-**Method 1 — Measured move:** project the opening range's own height from
-the boundary that broke:
-```
-range_height = OR_high - OR_low
-Bearish breakdown: measured_target = OR_low - range_height
-Bullish breakout:  measured_target = OR_high + range_height
-```
-
-**Method 2 — IV-implied expected move:** using the IV already returned by
-`get_option_greeks` for a near-ATM strike, compute a statistical expected
-move for the remaining trading day:
-```
-hours_remaining = trading hours left until 4:00 PM ET
-T_years = hours_remaining / (252 * 6.5)   # 252 trading days/yr, 6.5 hrs/day
-expected_move = current_price × IV × sqrt(T_years)
-Bearish breakdown: iv_target = current_price - expected_move
-Bullish breakout:  iv_target = current_price + expected_move
-```
-
-**Final projected_target** = whichever of `measured_target` / `iv_target`
-is closer to the current price (the more conservative, i.e. smaller,
-projected move). This target does NOT change the TP/SL percentages below
-— it exists solely to keep strike selection realistic (see next section).
-
-## Strike / Delta Target
-Same convention as before — ATM or slightly ITM, delta magnitude ≥ 0.40 —
-but candidate strikes are now **bounded by `projected_target`**: only
-consider strikes between the current price and `projected_target`
-(inclusive), never deeper ITM than the projection justifies. For example,
-if SPY is at $762 and `projected_target` is $759, don't consider a $750
-strike even if it has an appealing delta — it assumes a move the day's own
-data doesn't support. Use `get_option_greeks` on the bounded candidates to
-confirm delta before committing. If nothing in the bounded range reaches
-delta ≥ 0.40, use the closest available within that range and flag it —
-don't reach past `projected_target` to find a higher delta.
-
-Log the `projected_target` and which method produced it in the trade log
-entry (see `references/trade-log.md`) — the weekly review should track
-whether these projections are actually tracking realized moves.
+## Price Target Projection & Strike — unchanged from v1
+`projected_target` = the more conservative of measured move
+(OR height projected from the broken boundary) and IV expected move
+(`price × IV × sqrt(hours_left / (252 × 6.5))`). Candidate strikes are
+bounded between current price and `projected_target`; pick |delta| ≥ 0.40
+closest to 0.40, else the closest available inside the bound (flag it).
 
 ## Position Sizing
 ```
-contracts = floor($400 / (premium × 100)), minimum 1
+BUDGET    = min($200, optionsBuyingPower)        # was $400; account has ~$250
+contracts = floor(BUDGET / (premium × 100)), minimum 1 only if 1 contract ≤ BUDGET
 ```
+Never size up after a loss.
 
-## Exit Rule — tiered, two-lot exit (revised 9/23/26 after a live order-handling bug)
-The 90%/-50% unified exit was replaced after the first live trade showed
-premium peaking well short of +90% and fading fast — a fixed distant target
-was unlikely to ever fill, leaving the trade dependent on the SL or a forced
-EOD close instead.
-
-**9/23/26 incident — why SL is now a STOP order, and TP is no longer a
-resting order:** a live run submitted SL-A as a plain `SELL LIMIT` at
-`entry_premium × 0.70`. Since that price was below the live bid, the
-"limit" order was immediately marketable and filled on the spot at close
-to the entry price — a real, unintended loss, not a stop-loss waiting for
-the price to actually fall. Separately, Public's account rejects resting
-SELL/CLOSE orders once their combined quantity exceeds the quantity
-currently held — there is no OCO/bracket support, so a lot's own TP+SL
-pair (2 orders each for `tier1_qty`/`tier2_qty` contracts) already sums to
-the full position, leaving zero room for the other lot's exits, which get
-rejected outright. Both problems are fixed by the rules below.
-
+## Exit Rules (v2) — one resting stop per lot + a live watcher
 ```
-tier1_qty = ceil(N / 2)   # majority — closer, more achievable target
-tier2_qty = N - tier1_qty  # runner — remainder, let it ride further
+tier1_qty = ceil(N/2)   (Lot A)        tier2_qty = N − tier1_qty   (Lot B, runner)
 
-Lot A (tier1_qty contracts):
-  SL-A (resting): SELL STOP_LIMIT, stop_price = entry_premium × 0.70 (−30%),
-    limit_price = stop_price − 0.05 (rounded to the cent) to stay marketable
-    once triggered without under-selling by more than a nickel
-  TP-A (active check, not resting): target = entry_premium × 1.25 (+25%)
+Resting at all times (the safety net if the watcher dies):
+  DISASTER_SL: SELL STOP_LIMIT per lot, stop = entry × 0.60 (−40%),
+               limit = stop − 0.05
 
-Lot B (tier2_qty contracts, the runner — only exists if N >= 2):
-  SL-B (resting): SELL STOP_LIMIT, stop_price = entry_premium × 0.70 (−30%),
-    limit_price = stop_price − 0.05
-  TP-B (active check, not resting): target = entry_premium × 1.40 (+40%)
+Watched live (Phase 2 in SKILL.md, polled every POLL_SECONDS):
+  TP_A        bid ≥ entry × 1.25 → close Lot A
+  TP_B        bid ≥ entry × 1.40 → close Lot B
+  BREAKEVEN   bid ≥ entry × 1.15 → raise every open lot's stop to entry + 0.02
+              (limit = stop − 0.05). After Lot A's TP fills, Lot B's stop
+              goes to breakeven immediately if not already there.
+  STRUCTURAL  a completed 5-min SPY bar closes back inside the opening range
+              (CALL: close < OR_high; PUT: close > OR_low) → close all lots
+  TIME_STOP   60 min after entry, if bid < entry × 1.10 → close all lots
+  EOD         15:45 ET → close anything still open
+N = 1: Lot A only (TP at +25%).
 ```
+`POLL_SECONDS = 30` while a position is open.
 
-**Never submit a stop-loss as `order_type="LIMIT"`.** A SELL LIMIT priced
-below the market fills immediately instead of waiting — always use
-`order_type="STOP_LIMIT"` (`stop_price` = the target, `limit_price` a few
-cents below it) so the order rests until the price actually falls there.
+**How a watched exit executes — `cancel_and_replace_order`, never
+cancel-then-sell.** The lot's resting stop is atomically replaced by the
+exit order (`LIMIT` at the current bid for TP; `MARKET` for STRUCTURAL,
+TIME_STOP and EOD). There is never a moment with two exit orders (no
+oversell, stays within the account's no-OCO close-quantity cap) and never
+a moment with none. Raising the stop (BREAKEVEN) uses the same call with
+`order_type="STOP_LIMIT"` and the new prices. Details and fallbacks:
+`public-submission.md` § Watched Exits.
 
-**TP is monitored, not resting.** Only the two SL orders (one per lot) rest
-on the account at any time — that's the only way to stay within the
-account's "resting CLOSE quantity ≤ held quantity" cap with no OCO support.
-Each subsequent 5-minute run (see `references/public-submission.md` § TP
-Monitoring) fetches the current option quote for any lot still open and,
-if its TP target has been reached, cancels that lot's resting SL and
-submits a SELL LIMIT (or MARKET, if the quote already moved past target)
-to close it.
+**Never submit a stop-loss as `order_type="LIMIT"`** (9/23/26 incident — a
+sell limit below the market fills instantly). Stops are always
+`STOP_LIMIT`.
 
-**If N = 1** (can't split): skip tiering entirely — single SL-A (resting
-STOP_LIMIT) at -30%, single TP-A (active check) at +25%, same as Lot A
-alone.
+## One Trade Per Day — hard gate (fixes the 9/21 and 9/25 re-entries)
+The gate is **today's fills**, not open positions: if
+`get_history(start=<today 00:00 ET>)` shows any `BUY` of a SPY/SPX option
+on this account today, the day's trade is used up — even if it's already
+closed. Also blocked if any SPY/SPX option position or open order exists.
 
-Each lot's SL is independent of the other lot's SL — closing one lot never
-touches the other's resting order. All resting orders are
-`time_in_force="DAY"`.
-
-## End-of-Day Forced Close
-**2:45 PM CT (3:45 PM ET):** if either lot still has an open position
-(neither its TP nor its SL has filled), submit a MARKET SELL to close that
-lot's remaining contracts. Do not let a 0DTE SPY position ride into
-physical-settlement expiration — SPX is cash-settled
-and lower-risk to hold, but SPY is not.
-
-## Schedule
-- **9:00 AM CT (10:00 AM ET):** capture opening range (30-min high/low),
-  fetch previous day H/L for context, run the first breakout check
-  immediately using whatever 5-min bars have already closed by then.
-- **Every 5 minutes from 9:00 AM CT through 2:45 PM CT:** breakout check,
-  aligned to each new 5-min bar close (this cadence matches the 2-bar
-  confirmation rule — checking less often than every 5 minutes risks
-  missing or delaying a confirmed signal by a full bar or more).
-  (skipped once a trade has already been taken today).
-- **2:45 PM CT:** also the forced end-of-day close, run last regardless of
-  whether a new entry fired that check.
-
-## Budget Warning
-0DTE SPY ATM premiums typically run $150–$400 depending on realized
-volatility that morning — this is expected and the reason the budget is
-$400, not $200 like the equity-era config.
+## Session Lock
+Only one session may manage the account at a time. Google Doc
+`ORB Session Lock` holds one line: `<ISO timestamp> <session note>`.
+- Phase 0 reads it. If the timestamp is < 10 minutes old → another session
+  is live → exit immediately with `LOCKED — another session is running`.
+- Otherwise write a fresh timestamp, and refresh it at least every 5 minutes
+  for as long as this session runs. Clear it (write `released`) at the end.
+- If Drive is unavailable, proceed but flag it: the only guard left is the
+  one-trade gate.
