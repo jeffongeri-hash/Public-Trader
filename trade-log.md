@@ -1,6 +1,12 @@
 # Trade Log, Weekly Review & Monthly Review Reference
 
-## Log Storage: Google Drive (not a local file)
+## Log Storage
+**PAPER mode (current): `paper-ledger.md` in this repo is the log** — one
+entry per day in the formats below, a running equity line starting at
+$1,000, and the `[PAPER]` tag on every entry. Reviews read it. The Google
+Doc below applies to LIVE history only.
+
+### Google Drive (LIVE history)
 The trade log is a **Google Doc** named `ORB Trade Log` — not
 `~/orb-trade-log.md` on any machine. Cloud routines have no persistent
 filesystem between runs; Drive persists.

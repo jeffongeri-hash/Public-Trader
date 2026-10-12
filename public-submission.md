@@ -1,6 +1,10 @@
 # Public.com Submission Reference — ORB 0DTE Options, v2
 
 ## Connector Status
+> **PAPER mode is on (config.md): skip every `place_order` / `cancel_order` /
+> `cancel_and_replace_order` call in this file and record simulated fills
+> per config.md § Mode instead.**
+
 Orders are LIVE FILLS, not drafts. `place_order` and
 `cancel_and_replace_order` execute immediately against account
 **5OI27877 (CASH)**. There is no approval queue. In `MODE = PAPER`
