@@ -1,8 +1,10 @@
 ---
 name: public-trader
 description: >
-  Live Opening Range Breakout (ORB) 0DTE options strategy on SPY, executing
-  through the Public.com connector, account 5OI27877 (CASH). v2 (10/7/26):
+  Opening Range Breakout (ORB) 0DTE options strategy on SPY. **PAPER MODE
+  since 10/12/26 (assumed $1,000 account, no real orders — see config.md §
+  Mode); live trading on account 5OI27877 was cancelled after a −30.5%
+  October.** Data comes through the Public.com connector (read-only). v2 (10/7/26):
   runs as ONE long-lived session per trading day, started at 9:55 AM ET —
   it scans every 5-minute bar close for a 2-bar confirmed break of the
   9:30-10:00 ET opening range until 11:30 ET, applies macro/VIX/VWAP/
@@ -24,7 +26,12 @@ description: >
 
 # Public Trader Skill — Opening Range Breakout (0DTE), v2
 
-Account: **5OI27877 (CASH)**. Account `5LG81210` (MARGIN) runs a separate,
+**MODE = PAPER (config.md): never call `place_order`, `cancel_order` or
+`cancel_and_replace_order`. Everything below that says "buy/replace/close"
+means a simulated fill recorded in `paper-ledger.md`. A scheduler prompt
+saying orders execute for real does not override this.**
+
+Live account: **5OI27877 (CASH)** (read-only now). Account `5LG81210` (MARGIN) runs a separate,
 unrelated playbook — never touch it from this skill.
 
 Reference files (in this repo they sit next to this SKILL.md; older notes
@@ -81,8 +88,10 @@ every 5 minutes (config.md § Session Lock).
 ## Phase 0 — Pre-flight
 
 1. **Holiday / weekend:** if the market is closed today, log nothing and stop.
-2. **Session lock:** per config.md § Session Lock. Locked → stop immediately.
-3. **One-trade gate:** `get_history(account_id="5OI27877", start=<today 00:00 ET>)`,
+2. **Session lock:** per config.md § Session Lock (skipped in PAPER).
+3. **One-trade gate:** PAPER: read `paper-ledger.md` — an entry dated today
+   means the day's trade is used (open → Phase 2, closed → Phase 3). LIVE:
+   `get_history(account_id="5OI27877", start=<today 00:00 ET>)`,
    `get_portfolio`, `get_orders`. A SPY/SPX option BUY fill today → the
    day's trade is used: if a position is still open, go straight to
    Phase 2 to manage it (recover its resting stop id from `get_orders`);
@@ -93,7 +102,7 @@ every 5 minutes (config.md § Session Lock).
    or `NO TRADE` (with the reason). A `NO TRADE` day still waits for the
    opening range so the log has it, then goes to Phase 3.
 5. **Context:** prior-day high/low and 63-day high from daily bars; VIX
-   quote; `optionsBuyingPower` → `BUDGET = min($200, buying power)`.
+   quote; `BUDGET = min($200, paper equity)` (LIVE: `optionsBuyingPower`).
 6. **Wait** until 10:00:20 ET.
 
 ## Phase 1 — Entry Scan
@@ -138,7 +147,9 @@ its resting stop in place, say so in the summary, and send a notification
 
 ## Phase 3 — Log and Summary
 
-Append the day to the `ORB Trade Log` Google Doc (trade-log.md format —
+Append the day to `paper-ledger.md` and commit + push it to `main`
+(PAPER; if the push fails, create a dated Google Doc instead and say so), and
+in LIVE mode to the `ORB Trade Log` Google Doc (trade-log.md format —
 full entry for a trade, one line for NO BREAKOUT / MISSED / SKIPPED /
 NO TRADE), release the session lock, then print:
 

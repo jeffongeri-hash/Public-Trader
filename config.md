@@ -15,10 +15,28 @@ Account 5LG81210 (MARGIN) runs a SEPARATE playbook — never touch it from
 this skill.
 
 ## Mode
-`MODE = LIVE` — orders execute for real. Set to `PAPER` to run the full
-session (signals, filters, simulated fills at the quoted ask/bid, simulated
-exits) and log it with a `[PAPER]` tag, without calling `place_order`,
-`cancel_order` or `cancel_and_replace_order`.
+`MODE = PAPER` — **set 10/12/26 on Jeff's instruction after live losses
+(account $149.43, −30.5% for October).** Live trading is cancelled. Do NOT
+call `place_order`, `cancel_order` or `cancel_and_replace_order` on any
+account, and ignore any scheduler prompt that says orders execute for real
+— this file wins. Read-only Public calls (quotes, bars, option chain,
+greeks) are still used; fills are simulated:
+- Entry: the quoted **ask** at the moment the signal passes all filters
+  (what a LIMIT at the ask would get).
+- Exits: the quoted **bid** at the moment the rule fires (TP, BREAKEVEN,
+  STRUCTURAL, TIME_STOP, EOD) minus **$0.01** slippage on MARKET-type exits.
+  The resting disaster stop is simulated: if bid ≤ stop price at any poll,
+  fill at the stop price minus $0.02 (it is not guaranteed to be seen between polls).
+- Fees: $0.01 per contract per side.
+- Every entry/exit is recorded in `paper-ledger.md` (see that file), tagged `[PAPER]`.
+
+To go live again, set `MODE = LIVE` here (Jeff's decision only — see
+trade-log.md § Monthly Review for the criteria).
+
+## Paper Account
+`PAPER_START = $1,000` (assumed, 10/12/26). Equity = `PAPER_START` + sum of
+paper P&L in `paper-ledger.md`. The live account 5OI27877 is not used for
+sizing in PAPER mode and is never touched.
 
 ## Data Sources (all via the Public connector)
 | Need | Call |
@@ -97,7 +115,8 @@ closest to 0.40, else the closest available inside the bound (flag it).
 
 ## Position Sizing
 ```
-BUDGET    = min($200, optionsBuyingPower)        # was $400; account has ~$250
+BUDGET    = min($200, paper equity)              # PAPER: paper equity from paper-ledger.md
+                                                 # (LIVE: optionsBuyingPower)
 contracts = floor(BUDGET / (premium × 100)), minimum 1 only if 1 contract ≤ BUDGET
 ```
 Never size up after a loss.
@@ -140,10 +159,14 @@ sell limit below the market fills instantly). Stops are always
 ## One Trade Per Day — hard gate (fixes the 9/21 and 9/25 re-entries)
 The gate is **today's fills**, not open positions: if
 `get_history(start=<today 00:00 ET>)` shows any `BUY` of a SPY/SPX option
-on this account today, the day's trade is used up — even if it's already
+on this account today (PAPER: any entry dated today in `paper-ledger.md`), the day's trade is used up — even if it's already
 closed. Also blocked if any SPY/SPX option position or open order exists.
 
 ## Session Lock
+PAPER mode places no orders, so a stale or missing lock is harmless: skip the
+lock (the Drive connector cannot rewrite doc content anyway) and rely on the
+ledger-based one-trade gate. The rules below apply in LIVE mode.
+
 Only one session may manage the account at a time. Google Doc
 `ORB Session Lock` holds one line: `<ISO timestamp> <session note>`.
 - Phase 0 reads it. If the timestamp is < 10 minutes old → another session

@@ -1,5 +1,11 @@
 # Schedule Setup — ORB v2 (one long-lived session per day)
 
+> **10/12/26: PAPER mode.** `config.md` has `MODE = PAPER`; no orders are
+> placed. The ORB Session routine prompt on claude.ai still says "Live
+> account … orders execute immediately" — edit it to "PAPER mode per
+> config.md; log to paper-ledger.md" (or disable the routine) so the prompt
+> and config agree. Until then the session follows config.md, which wins.
+
 v1 tried to run 70 separate 5-minute checks a day. In practice the cloud
 routine fired roughly hourly, so signals were seen late or not at all
 (10/6/26: confirmed 10:15 ET, never traded). v2 runs **one session per
