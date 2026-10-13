@@ -10,6 +10,7 @@ Running equity = $1,000.00 + sum of `Day P&L` below.
 | Date | Status | Day P&L | Equity |
 |---|---|---|---|
 | 2026-10-12 | TRADED — PUT, BREAKEVEN stop both lots | −$0.04 | $999.96 |
+| 2026-10-13 | TRADED — PUT, STRUCTURAL both lots | −$44.08 | $955.88 |
 
 ## Entries
 (newest last)
@@ -36,3 +37,27 @@ Running equity = $1,000.00 + sum of `Day P&L` below.
 **Execution deviations:** none (no orders placed; PAPER).
 
 **Post-trade analysis:** Entry was timely (<1 min after the signal bar closed). The breakeven ratchet fired at +21% bid but the +25% TP at $1.00 was 3 cents away — the trade gave back the move and was stopped flat; the −$0.02 stop slippage convention is what turned a +$0.02 stop into a $0.80 fill. SPY never closed back inside the range (structural stop not hit), so the thesis held; the option decayed/chopped on a very narrow day (range 0.14%, 0DTE theta heavy). Worth watching in reviews: breakeven at entry+$0.02 on a 0.80 premium leaves very little room.
+
+## 2026-10-13 — BEARISH BREAKDOWN  [PAPER]
+
+**Opening range:** $777.16 - $778.75 (width 0.20%)
+**Signal:** 10:50 close $776.99 and 10:55 close $776.89 (both below OR low); seen at 11:00:23 ET, age 0 bars. WATCHING seen at 10:50 (1 of 2) before confirming; price sat inside the range 10:05-10:45 (10:30 close exactly on OR low $777.16)
+**Context:** prior day $777.05-$779.40 | 63-day high $781.62 | VWAP $777.81 | VIX 15.33 (+0.8%) | Macro NORMAL (bank earnings, existing home sales; CPI is Wed 10/14)
+**Filters:** all passed — OR width 0.20% <= 0.40%; SPY 776.94 < VWAP 777.81; VIX 15.33 (<30, +0.8%); prior-day low 777.05 already cleared (above price)
+
+**Entry:**
+- Underlying: SPY (fits $200 budget)
+- Projected target: $775.57 via measured move (OR height 1.59 below 777.16); IV method (IV ~1.8) was far farther
+- Strike: $776 put 0DTE (SPY261013P00776000), Δ-0.32 — FLAG: only integer strike inside the bound [775.57, 776.94]; below the 0.40 delta preference (777P, Δ-0.51, sits above price/outside the bound)
+- Contracts: 4 (floor($200 / ($0.42 x 100)))
+- Fill [PAPER]: $0.42 x 4 = $168.00 at 11:00:45 ET (ask; signal->fill ~ 45 s after bar close)
+
+**Lot A (2 ct, TP +25% = $0.525):** STRUCTURAL @ $0.31 11:15:22 — −$22.00 gross (−26%) | peak bid while held $0.46 (+10%)
+**Lot B (2 ct, TP +40% = $0.588):** STRUCTURAL @ $0.31 11:15:22 — −$22.00 gross (−26%) | peak bid $0.46
+
+**Day:** held 11:00-11:15 (15 min) | P&L −$44.08 (gross −$44.00, fees $0.01 x 8), −26.2% of cost
+**Stop history:** disaster $0.25 never touched (low bid $0.32); breakeven trigger $0.483 never reached.
+**Execution deviations:** none (no orders placed; PAPER). Exit fill = bid $0.32 minus $0.01 MARKET slippage.
+
+**Post-trade analysis:** Entry was timely (45 s after the confirming bar) but the signal was thin: SPY had chopped inside the range for 45 min and only slipped ~0.4 below OR low on the confirming bars, so the put was bought at $0.42 with delta -0.32 and no momentum behind it. The 11:10 bar closed at $777.17, 1 cent above OR low $777.16, and fired the structural stop; the option bid was $0.32 (-24%) at the time, so the stop cost most of the loss rather than saving it — it was already in the red when the thesis broke. The option never got closer than +10% to the +15% breakeven trigger. Worth watching in reviews: entries confirmed 80+ minutes after the open on a narrow range, and a 1-cent structural margin.
+
