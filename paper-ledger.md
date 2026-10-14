@@ -11,6 +11,7 @@ Running equity = $1,000.00 + sum of `Day P&L` below.
 |---|---|---|---|
 | 2026-10-12 | TRADED — PUT, BREAKEVEN stop both lots | −$0.04 | $999.96 |
 | 2026-10-13 | TRADED — PUT, STRUCTURAL both lots | −$44.08 | $955.88 |
+| 2026-10-14 | SKIPPED — OR width 0.41% > 0.30% (CPI data day) | $0.00 | $955.88 |
 
 ## Entries
 (newest last)
@@ -61,3 +62,10 @@ Running equity = $1,000.00 + sum of `Day P&L` below.
 
 **Post-trade analysis:** Entry was timely (45 s after the confirming bar) but the signal was thin: SPY had chopped inside the range for 45 min and only slipped ~0.4 below OR low on the confirming bars, so the put was bought at $0.42 with delta -0.32 and no momentum behind it. The 11:10 bar closed at $777.17, 1 cent above OR low $777.16, and fired the structural stop; the option bid was $0.32 (-24%) at the time, so the stop cost most of the loss rather than saving it — it was already in the red when the thesis broke. The option never got closer than +10% to the +15% breakeven trigger. Worth watching in reviews: entries confirmed 80+ minutes after the open on a narrow range, and a 1-cent structural margin.
 
+## 2026-10-14 — SKIPPED — OR width (CPI data day)  [PAPER]
+
+**Opening range:** $773.20 - $776.35 (width 0.41%)
+**Signal:** PUT — 10:05 close $773.01 and 10:10 close $772.90 both below OR low; fresh at the 10:15 check (age 0)
+**Context:** prior day $775.95-$778.75 | 63-day high $781.62 | VIX 15.43 at open, 15.90 (+4.1%) at 11:35 | Macro DATA DAY: Sep CPI 8:30 ET (headline fcst +0.6% m/m), Beige Book 2:00 PM
+**Filter failed:** OR width 0.41% > 0.30% (data-day limit; also > 0.40% normal limit). No trade, no position.
+**Outcome (hypothetical, not traded):** SPY kept sliding, 771.64 at 11:35 (−0.82% on the day), never back inside the range — the skipped PUT would have been a winner. Worth tracking in the monthly review's filter stats: OR-width skips on data days.
