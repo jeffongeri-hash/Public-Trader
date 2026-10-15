@@ -12,6 +12,7 @@ Running equity = $1,000.00 + sum of `Day P&L` below.
 | 2026-10-12 | TRADED — PUT, BREAKEVEN stop both lots | −$0.04 | $999.96 |
 | 2026-10-13 | TRADED — PUT, STRUCTURAL both lots | −$44.08 | $955.88 |
 | 2026-10-14 | SKIPPED — OR width 0.41% > 0.30% (CPI data day) | $0.00 | $955.88 |
+| 2026-10-15 | SKIPPED — OR width 0.39% > 0.30% (PPI/retail sales data day) | $0.00 | $955.88 |
 
 ## Entries
 (newest last)
@@ -69,3 +70,11 @@ Running equity = $1,000.00 + sum of `Day P&L` below.
 **Context:** prior day $775.95-$778.75 | 63-day high $781.62 | VIX 15.43 at open, 15.90 (+4.1%) at 11:35 | Macro DATA DAY: Sep CPI 8:30 ET (headline fcst +0.6% m/m), Beige Book 2:00 PM
 **Filter failed:** OR width 0.41% > 0.30% (data-day limit; also > 0.40% normal limit). No trade, no position.
 **Outcome (hypothetical, not traded):** SPY kept sliding, 771.64 at 11:35 (−0.82% on the day), never back inside the range — the skipped PUT would have been a winner. Worth tracking in the monthly review's filter stats: OR-width skips on data days.
+
+## 2026-10-15 — SKIPPED — OR width (PPI / retail sales data day)  [PAPER]
+
+**Opening range:** $764.43 - $767.44 (width 0.39%)
+**Signal:** CALL — 10:30 close $767.80 and 10:35 close $768.20 both above OR high; seen at 10:40:16 ET, age 0 bars (fresh, SPY ~$768.14). WATCHING at 10:15 (close $767.53, 1 of 2; 10:20 closed exactly on OR high $767.44, no pair)
+**Context:** prior day $766.71-$776.35 | 63-day high $781.62 | VIX 17.67 (+4.7%) at open | Macro DATA DAY: Sep PPI (fcst +0.5% m/m) and retail sales (+0.3%) 8:30 ET; Fed speaker times unconfirmed (none found in 10:00-11:30 ET)
+**Filter failed:** OR width 0.39% > 0.30% (data-day limit). No trade, no position. VWAP/level filters not evaluated (first failure ends the day).
+**Outcome (hypothetical, not traded):** not computed from option history; SPY was $768.14 at 10:40, price opened -0.4% gap-down and was reclaiming the range. Track in the monthly filter scorecard: OR-width skips on data days (10/14, 10/15).
