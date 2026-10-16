@@ -13,6 +13,7 @@ Running equity = $1,000.00 + sum of `Day P&L` below.
 | 2026-10-13 | TRADED — PUT, STRUCTURAL both lots | −$44.08 | $955.88 |
 | 2026-10-14 | SKIPPED — OR width 0.41% > 0.30% (CPI data day) | $0.00 | $955.88 |
 | 2026-10-15 | SKIPPED — OR width 0.39% > 0.30% (PPI/retail sales data day) | $0.00 | $955.88 |
+| 2026-10-16 | TRADED — PUT, TP both lots | +$109.96 | $1,065.84 |
 
 ## Entries
 (newest last)
@@ -78,3 +79,26 @@ Running equity = $1,000.00 + sum of `Day P&L` below.
 **Context:** prior day $766.71-$776.35 | 63-day high $781.62 | VIX 17.67 (+4.7%) at open | Macro DATA DAY: Sep PPI (fcst +0.5% m/m) and retail sales (+0.3%) 8:30 ET; Fed speaker times unconfirmed (none found in 10:00-11:30 ET)
 **Filter failed:** OR width 0.39% > 0.30% (data-day limit). No trade, no position. VWAP/level filters not evaluated (first failure ends the day).
 **Outcome (hypothetical, not traded):** not computed from option history; SPY was $768.14 at 10:40, price opened -0.4% gap-down and was reclaiming the range. Track in the monthly filter scorecard: OR-width skips on data days (10/14, 10/15).
+
+## 2026-10-16 — BEARISH BREAKDOWN  [PAPER]
+
+**Opening range:** $771.00 - $773.25 (width 0.29%)
+**Signal:** 11:00 close $770.99 and 11:05 close $769.74 (both below OR low); seen at 11:10:20 ET, age 0 bars. WATCHING at 10:25 (close $770.91, 1 of 2) did not confirm (10:30 closed back inside at $771.44); price chopped inside the range 10:00-10:55
+**Context:** prior day $764.43-$772.87 | 63-day high $781.62 | VWAP $771.67 | VIX 16.16 (-1.8%) | Macro DATA DAY: monthly opex (3rd Friday); no data releases found; Fed Chair Warsh IMF talk 11:30 PM ET Thu 10/15, outside the session
+**Filters:** all passed — OR width 0.29% <= 0.30% (data-day limit); SPY 769.48 < VWAP 771.67; VIX 16.16 (<30, -1.8%); prior-day low 764.43 more than $1.00 below price
+
+**Entry:**
+- Underlying: SPY (fits $200 budget)
+- Projected target: $768.75 via measured move (OR height 2.25 below 771.00)
+- Strike: $769 put 0DTE (SPY261016P00769000), Δ-0.43 — only integer strike inside the bound [768.75, 769.48]
+- Contracts: 2 (floor($200 / ($0.98 x 100)))
+- Fill [PAPER]: $0.98 x 2 = $196.00 at ~11:10:45 ET (ask; ~25 s after the signal bar closed)
+
+**Lot A (1 ct, TP +25% = $1.225):** TP @ $1.53 11:22:40 — +$55.00 gross (+56%) | low bid while held $0.68 (-31%)
+**Lot B (1 ct, TP +40% = $1.372):** TP @ $1.53 11:22:40 — +$55.00 gross (+56%) | peak bid $1.53
+
+**Day:** held 11:10-11:22 (12 min) | P&L +$109.96 (gross +$110.00, fees $0.01 x 4), +56.1% of cost
+**Stop history:** disaster $0.588 never touched (low bid $0.68); breakeven trigger $1.127 never fired separately — the bid jumped from $1.10 to $1.53 between two 30 s polls (SPY 769.12 -> 768.47), clearing both TPs at once.
+**Execution deviations:** none (no orders placed; PAPER). Both TP fills assume a LIMIT at the polled bid of $1.53 filled in full, per config.md § Mode; the bid moved fast and a real fill could differ.
+
+**Post-trade analysis:** Entry was timely (~25 s after the confirming bar) on a signal that took 70 minutes of chop to form. The option drew down as far as -31% (bid $0.68) within the first 5 minutes while SPY bounced ~$0.50, close to but well above the -40% disaster stop, then rallied +56% in one 30 s step when SPY dropped $0.65. Order-of-magnitude swings in 30 s are normal for a 0DTE put with gamma 0.13 and IV 278%. The 11:15 structural check was far from firing (needs a close above 771.00). Worth watching in reviews: a paper TP that fills both lots at a single polled bid after a gap; the 0.30% data-day OR limit was cleared by only 1 bp (0.29%).
