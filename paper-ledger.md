@@ -14,6 +14,7 @@ Running equity = $1,000.00 + sum of `Day P&L` below.
 | 2026-10-14 | SKIPPED — OR width 0.41% > 0.30% (CPI data day) | $0.00 | $955.88 |
 | 2026-10-15 | SKIPPED — OR width 0.39% > 0.30% (PPI/retail sales data day) | $0.00 | $955.88 |
 | 2026-10-16 | TRADED — PUT, TP both lots | +$109.96 | $1,065.84 |
+| 2026-10-19 | TRADED — CALL, DISASTER SL (1 lot) | −$47.02 | $1,018.82 |
 
 ## Entries
 (newest last)
@@ -102,3 +103,26 @@ Running equity = $1,000.00 + sum of `Day P&L` below.
 **Execution deviations:** none (no orders placed; PAPER). Both TP fills assume a LIMIT at the polled bid of $1.53 filled in full, per config.md § Mode; the bid moved fast and a real fill could differ.
 
 **Post-trade analysis:** Entry was timely (~25 s after the confirming bar) on a signal that took 70 minutes of chop to form. The option drew down as far as -31% (bid $0.68) within the first 5 minutes while SPY bounced ~$0.50, close to but well above the -40% disaster stop, then rallied +56% in one 30 s step when SPY dropped $0.65. Order-of-magnitude swings in 30 s are normal for a 0DTE put with gamma 0.13 and IV 278%. The 11:15 structural check was far from firing (needs a close above 771.00). Worth watching in reviews: a paper TP that fills both lots at a single polled bid after a gap; the 0.30% data-day OR limit was cleared by only 1 bp (0.29%).
+
+## 2026-10-19 — BULLISH BREAKOUT  [PAPER]
+
+**Opening range:** $766.21 - $768.06 (width 0.24%)
+**Signal:** 10:10 close $768.34 and 10:15 close $768.64 (both above OR high); seen at 10:20:20 ET, age 0 bars. Price sat inside the range 10:00-10:05
+**Context:** prior day $760.64-$773.25 | 63-day high $781.62 | VWAP $767.17 | VIX 17.67 (−11.6%) | Macro NORMAL (no major releases or Fed speakers found; calendar search was thin, Oct 27-28 FOMC not yet)
+**Filters:** all passed — OR width 0.24% <= 0.40%; SPY 768.73 > VWAP 767.17; VIX 17.67 (<30, falling); prior-day high 773.25 and 63-day high 781.62 more than $1.00 above price
+
+**Entry:**
+- Underlying: SPY (fits $200 budget)
+- Projected target: $769.91 via measured move (OR height 1.85 above 768.06); IV method (IV ~3.05) was far farther
+- Strike: $769 call 0DTE (SPY261019C00769000), Δ0.45 — only integer strike inside the bound [768.73, 769.91]
+- Contracts: 1 (floor($200 / ($1.12 x 100)))
+- Fill [PAPER]: $1.12 x 1 = $112.00 at ~10:20:45 ET (ask; ~25 s after the signal bar closed)
+
+**Lot A (1 ct, TP +25% = $1.40):** DISASTER SL @ $0.65 10:32:55 (stop $0.67 minus $0.02) — −$47.00 gross (−42%) | peak bid while held $1.13 (+1%)
+
+**Day:** held 10:20-10:33 (12 min) | P&L −$47.02 (gross −$47.00, fees $0.01 x 2), −42.0% of cost
+**Stop history:** disaster $0.67 never ratcheted; breakeven trigger $1.288 never reached (peak bid $1.13).
+**Execution deviations:** none (no orders placed; PAPER). The disaster stop was seen at a 30 s poll (bid $0.65 after $0.75 33 s earlier, SPY 767.19); the polled bid was already at/below the stop, so the fill is simulated at stop minus $0.02 per config. One poll gap of ~70 s around 10:29-10:30 (waiting for the 10:25 bar close); bid was $0.97-$1.05 either side, so no effect.
+
+**Post-trade analysis:** Entry was timely and filters were clean, but the breakout never extended: the 10:20 and 10:25 bars held 768.4-768.8 (barely 0.3-0.7 above the OR high), then SPY slid ~$1.40 in 7 minutes, with the option going $1.05 -> $0.65 between 10:30:32 and 10:32:55. The -40% disaster stop fired before the structural exit could: the 10:30 bar had not yet closed, and SPY was still ~$1.10 above the OR high-minus-close threshold only on bar closes, so the premium-based stop was the binding exit. The option lost 42% on a 0.67% (≈$1.00) SPY pullback to 767.19 — a delta-0.45, gamma-0.12 0DTE call at IV ~300% is very sensitive; a structural exit one bar earlier would have saved ~$0.30 at best. Worth watching in reviews: fast reversals within 15 min of entry on a signal whose 2 bars closed only 0.3-0.6 beyond the boundary (10/13 and 10/19 both thin).
+
