@@ -16,6 +16,7 @@ Running equity = $1,000.00 + sum of `Day P&L` below.
 | 2026-10-16 | TRADED — PUT, TP both lots | +$109.96 | $1,065.84 |
 | 2026-10-19 | TRADED — CALL, DISASTER SL (1 lot) | −$47.02 | $1,018.82 |
 | 2026-10-21 | TRADED — PUT, STRUCTURAL (1 lot) | −$62.02 | $956.80 |
+| 2026-10-22 | SKIPPED — VIX +14.9% on the day (> 10%) | $0.00 | $956.80 |
 
 ## Entries
 (newest last)
@@ -148,3 +149,11 @@ Running equity = $1,000.00 + sum of `Day P&L` below.
 **Execution deviations:** none (no orders placed; PAPER). Exit fill = bid $1.01 minus $0.01 MARKET slippage. Polls ran roughly every 30 s, with a couple of ~1 min gaps around bar-close checks.
 
 **Post-trade analysis:** Entry was timely (~45 s after the confirming bar) on a filter-clean but shallow signal: both signal bars closed only ~$1.0 below OR low. SPY spent 10:10-10:30 drifting from 768.4 back toward the boundary, and the option bled from +9% to -38% on drift and theta. The 10:30 bar closed $0.20 back above OR low and fired the structural stop; the bid at that moment ($1.01) was one cent above the disaster stop, so the structural exit saved only ~$0.05 versus the disaster stop. SPY kept grinding up after the exit, so the thesis failed. Worth watching in reviews: third thin-signal loss in four trades (10/13, 10/19, 10/21 — confirmed with closes only $1-1.6 beyond the range) and the 769P being ITM/near-ATM with theta ~$1.6/hr on a quiet tape.
+
+## 2026-10-22 — SKIPPED — VIX (up 14.9% on the day)  [PAPER]
+
+**Opening range:** $765.35 - $767.45 (width 0.27%)
+**Signal:** PUT — 10:20 close $764.42 and 10:25 close $763.34 both below OR low; seen at 10:30:45 ET, age 0 bars (fresh, SPY ~$762.81, inside the 0.10% chase limit). WATCHING bearish at the 10:25 check (10:20 bar alone). SPY gapped down -0.9% at the open (prior close $773.09) and sat inside the range 09:30-10:15
+**Context:** prior day $768.40-$774.44 | 63-day high $781.62 | VWAP $766.34 | VIX 19.16 (+14.87% vs prev close 16.68; 18.32, +9.8% at 09:52) | Macro NORMAL (calendar search returned nothing for 10/22 — macro check unavailable; Oct 27-28 FOMC not yet)
+**Filters:** macro pass (unverified); OR width 0.27% <= 0.40% pass; SPY 762.81 < VWAP 766.34 pass; **VIX FAIL** — +14.87% > +10% limit. Levels and budget not evaluated (first failure ends the day).
+**Outcome:** no trade, no position. Hypothetical outcome not computed. A volatility-spike gap-down day filtered out by the VIX rule; track in the monthly filter scorecard.
