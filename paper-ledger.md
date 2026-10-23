@@ -17,6 +17,7 @@ Running equity = $1,000.00 + sum of `Day P&L` below.
 | 2026-10-19 | TRADED — CALL, DISASTER SL (1 lot) | −$47.02 | $1,018.82 |
 | 2026-10-21 | TRADED — PUT, STRUCTURAL (1 lot) | −$62.02 | $956.80 |
 | 2026-10-22 | SKIPPED — VIX +14.9% on the day (> 10%) | $0.00 | $956.80 |
+| 2026-10-23 | TRADED — CALL, BREAKEVEN stop (1 lot) | −$0.02 | $956.78 |
 
 ## Entries
 (newest last)
@@ -157,3 +158,26 @@ Running equity = $1,000.00 + sum of `Day P&L` below.
 **Context:** prior day $768.40-$774.44 | 63-day high $781.62 | VWAP $766.34 | VIX 19.16 (+14.87% vs prev close 16.68; 18.32, +9.8% at 09:52) | Macro NORMAL (calendar search returned nothing for 10/22 — macro check unavailable; Oct 27-28 FOMC not yet)
 **Filters:** macro pass (unverified); OR width 0.27% <= 0.40% pass; SPY 762.81 < VWAP 766.34 pass; **VIX FAIL** — +14.87% > +10% limit. Levels and budget not evaluated (first failure ends the day).
 **Outcome:** no trade, no position. Hypothetical outcome not computed. A volatility-spike gap-down day filtered out by the VIX rule; track in the monthly filter scorecard.
+
+## 2026-10-23 — BULLISH BREAKOUT  [PAPER]
+
+**Opening range:** $759.14 - $761.20 (width 0.27%)
+**Signal:** 10:40 close $761.64 and 10:45 close $762.33 (both above OR high); seen at 10:50:20 ET, age 1 bar (signal bar 10:45, newest completed 10:50). SPY gapped down -0.5% at the open (prior close $763.96) and sat inside the range 09:30-10:35 (10:15-10:25 closes $759.20/$759.20/$759.65 hugged the OR low without a pair)
+**Context:** prior day $761.16-$767.71 | 63-day high $781.62 | VWAP $760.23 | VIX 19.24 (+1.2%; +5.6% at 09:52, which would have blocked a CALL, but the filter is evaluated at entry) | Macro NORMAL (calendar search thin: only UMich sentiment 10:00; no Fed speakers or mega-cap earnings found)
+**Filters:** all passed — OR width 0.27% <= 0.40%; SPY 762.40 > VWAP 760.23; VIX 19.24 (<30, +1.2% < 5%); prior-day high 767.71 and 63-day high 781.62 more than $1.00 above price
+
+**Entry:**
+- Underlying: SPY (fits $200 budget)
+- Projected target: $763.26 via measured move (OR height 2.06 above 761.20); IV method (IV 23%) was farther
+- Strike: $763 call 0DTE (SPY261023C00763000), Δ0.45 — only integer strike inside the bound [762.37, 763.26] (762C, Δ0.54, sits below price)
+- Contracts: 1 (floor($200 / ($1.48 x 100)))
+- Fill [PAPER]: $1.48 x 1 = $148.00 at ~10:50:50 ET (ask; ~30 s after the signal was seen)
+
+**Lot A (1 ct, TP +25% = $1.85):** BREAKEVEN STOP @ $1.48 10:58:13 (stop $1.50 minus $0.02) — $0.00 gross (0%) | peak bid while held $1.75 (+18%), low bid $1.37 (-7%)
+
+**Day:** held 10:50-10:58 (8 min) | P&L −$0.02 (fees $0.01 x 2), −0.0% of cost
+**Stop history:** disaster $0.89 never touched; breakeven ratchet to $1.50 at 10:55:45 (bid $1.73 crossed the $1.70 trigger); stop hit at 10:58:13 (bid $1.48).
+**Execution deviations:** none (no orders placed; PAPER). Polls ran about every 30-35 s. SPY never closed back inside the range during the hold (structural not tested; the 10:55 bar had not closed).
+
+**Post-trade analysis:** Entry was timely (signal age 1 bar, ~30 s after seen) and filters were clean, but the option peaked at $1.75, 10 cents short of the +25% TP at $1.85, and then bled back while SPY slipped from 763.05 to 762.53 on heavy 0DTE theta (~$1.5/hr). The breakeven ratchet at +15% protected the capital, and the -$0.02 stop slippage convention turned a +$0.02 stop into a flat fill, same as 10/12. Second breakeven stop in six trades. SPY was still ~$1.3 above the OR high at exit, so the thesis held; the stop cut a trade that stayed alive. Worth watching in reviews: breakeven at entry+$0.02 on a ~$1.50 premium leaves almost no room (a 0.13 pullback from the peak), and the VIX regime flipped from +5.6% to +1.2% within an hour, so the VIX filter's timing matters.
+
