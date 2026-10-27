@@ -19,6 +19,7 @@ Running equity = $1,000.00 + sum of `Day P&L` below.
 | 2026-10-22 | SKIPPED — VIX +14.9% on the day (> 10%) | $0.00 | $956.80 |
 | 2026-10-23 | TRADED — CALL, BREAKEVEN stop (1 lot) | −$0.02 | $956.78 |
 | 2026-10-26 | TRADED — CALL, DISASTER SL (1 lot) | −$48.02 | $908.76 |
+| 2026-10-27 | TRADED — CALL, TP both lots | +$57.94 | $966.70 |
 
 ## Entries
 (newest last)
@@ -203,3 +204,26 @@ Running equity = $1,000.00 + sum of `Day P&L` below.
 **Execution deviations:** none (no orders placed; PAPER). The stop was seen at a ~35 s poll (bid $0.68 after $0.76 at 10:30:18); fill simulated at stop minus $0.02 per config. The bid touched $0.70 at 10:27 and bounced to $0.83 before the final slide.
 
 **Post-trade analysis:** Entry was timely and filters were clean, but the entry ask $1.14 came right after a $1.13 quote at the local high; the option lost 10% within 40 s (bid $1.01 at 10:21:39) as SPY slipped 0.35 from the signal print. SPY then drifted from 765.68 to 764.46, ~$0.16 above the OR high, without ever closing a bar back inside (structural never fired: 10:20 and 10:25 closed 764.87 and 764.76), so the premium-based -40% stop was the binding exit on a ~$1.2 SPY pullback. Fourth thin-signal loss in five trades: both signal bars closed only $0.4-1.4 above the OR high and the entry paid the post-spike ask. Worth watching in reviews: entries made within a minute of a bar-close price spike, and the -40% stop on ~$1 premiums sitting inside normal 0DTE noise (stopped at SPY 764.46 while the structural level was 764.30).
+
+## 2026-10-27 — BULLISH BREAKOUT  [PAPER]
+
+**Opening range:** $765.78 - $768.36 (width 0.34%)
+**Signal:** 10:55 close $768.72 and 11:00 close $769.10 (both above OR high); seen at 11:05:20 ET, age 0 bars. The 10:50 close of $768.35 missed the OR high by one cent, so the pair started a bar later. Earlier, a 10:15 close of $765.44 (below OR low) was a bearish 1 of 2 that reverted at 10:20. Price sat inside the range 09:30-10:45
+**Context:** prior day $761.63-$767.73 | 63-day high $781.62 | VWAP $766.99 | VIX 17.56 (−4.5%) | Macro NORMAL — FOMC day 1 of 2 (decision Wed 10/28, not today); Conference Board consumer confidence 10:00 ET and durable goods 8:30 ET are not on the config.md data-day list; mega-cap earnings could not be verified (calendar search returned nothing for FOMC or earnings), so macro check partly unavailable
+**Filters:** all passed — OR width 0.34% <= 0.40%; SPY 769.09 > VWAP 766.99; VIX 17.56 (<30, −4.5%); prior-day high 767.73 already cleared, 63-day high 781.62 more than $1.00 above price
+
+**Entry:**
+- Underlying: SPY (fits $200 budget)
+- Projected target: $770.94 via measured move (OR height 2.58 above 768.36)
+- Strike: $770 call 0DTE (SPY261027C00770000), Δ0.35 — FLAG: below the 0.40 delta target; the only integer strike inside the bound [769.09, 770.94] (769C, Δ0.50, sits below price)
+- Contracts: 3 (floor($200 / ($0.60 x 100))), Lot A 2 ct, Lot B 1 ct
+- Fill [PAPER]: $0.60 x 3 = $180.00 at ~11:05:45 ET (ask; ~25 s after the signal was seen)
+
+**Lot A (2 ct, TP +25% = $0.75):** TP @ $0.77 11:16:53 — +$34.00 gross (+28%) | low bid while held $0.45, peak bid $0.77
+**Lot B (1 ct, TP +40% = $0.84):** TP @ $0.84 11:20:24 — +$24.00 gross (+40%) | peak bid $0.84
+
+**Day:** held 11:05-11:20 (15 min) | P&L +$57.94 (gross +$58.00, fees $0.01 x 6), +32.2% of cost
+**Stop history:** disaster $0.36 never touched (low bid $0.45 at 11:10:25, −25%); breakeven trigger $0.69 hit at 11:15:03 (bid $0.69), both stops raised to $0.62, never touched (low bid afterward $0.69).
+**Execution deviations:** none (no orders placed; PAPER). Both TP fills assume a LIMIT at the polled bid filled in full, per config.md § Mode. Polls ran about every 30-35 s; structural check passed at the 11:05 and 11:10 bar closes ($768.73, ~$768.64+ vs OR high $768.36).
+
+**Post-trade analysis:** Entry was timely (signal age 0, ~25 s after seen) and the option drew down to $0.45 (−25%) over the first 5 minutes as SPY slipped from 769.10 back to ~768.65, only $0.30 above the OR high, before reversing and running to 769.72 for both targets inside 15 minutes. Structural never fired but came within about $0.30. Contrast with 10/19, 10/21 and 10/26: here the confirmation came 90 minutes into the session after repeated tests of the boundary, and the +$0.60 premium meant a TP was only $0.15/$0.24 away. Worth watching in reviews: the later, grinding confirmation (one cent miss at 10:50) worked; Δ0.35 flag.
