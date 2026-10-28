@@ -20,6 +20,7 @@ Running equity = $1,000.00 + sum of `Day P&L` below.
 | 2026-10-23 | TRADED — CALL, BREAKEVEN stop (1 lot) | −$0.02 | $956.78 |
 | 2026-10-26 | TRADED — CALL, DISASTER SL (1 lot) | −$48.02 | $908.76 |
 | 2026-10-27 | TRADED — CALL, TP both lots | +$57.94 | $966.70 |
+| 2026-10-28 | NO TRADE — FOMC decision day | $0.00 | $966.70 |
 
 ## Entries
 (newest last)
@@ -227,3 +228,6 @@ Running equity = $1,000.00 + sum of `Day P&L` below.
 **Execution deviations:** none (no orders placed; PAPER). Both TP fills assume a LIMIT at the polled bid filled in full, per config.md § Mode. Polls ran about every 30-35 s; structural check passed at the 11:05 and 11:10 bar closes ($768.73, ~$768.64+ vs OR high $768.36).
 
 **Post-trade analysis:** Entry was timely (signal age 0, ~25 s after seen) and the option drew down to $0.45 (−25%) over the first 5 minutes as SPY slipped from 769.10 back to ~768.65, only $0.30 above the OR high, before reversing and running to 769.72 for both targets inside 15 minutes. Structural never fired but came within about $0.30. Contrast with 10/19, 10/21 and 10/26: here the confirmation came 90 minutes into the session after repeated tests of the boundary, and the +$0.60 premium meant a TP was only $0.15/$0.24 away. Worth watching in reviews: the later, grinding confirmation (one cent miss at 10:50) worked; Δ0.35 flag.
+
+## 2026-10-28 — NO TRADE  [PAPER]
+OR $769.25-$771.70 (w 0.32%) | Macro NO TRADE: FOMC decision day (Oct 27-28, 2:00 PM ET; confirmed by search) | VIX 17.47 (-0.2%) | Status: NO TRADE — FOMC decision day per config.md § Macro Event Rules. Opening range recorded only; no signal scan, no position.
