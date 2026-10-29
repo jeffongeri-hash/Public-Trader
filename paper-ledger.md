@@ -21,6 +21,7 @@ Running equity = $1,000.00 + sum of `Day P&L` below.
 | 2026-10-26 | TRADED — CALL, DISASTER SL (1 lot) | −$48.02 | $908.76 |
 | 2026-10-27 | TRADED — CALL, TP both lots | +$57.94 | $966.70 |
 | 2026-10-28 | NO TRADE — FOMC decision day | $0.00 | $966.70 |
+| 2026-10-29 | TRADED — CALL, DISASTER SL (1 lot) | −$48.02 | $918.68 |
 
 ## Entries
 (newest last)
@@ -231,3 +232,25 @@ Running equity = $1,000.00 + sum of `Day P&L` below.
 
 ## 2026-10-28 — NO TRADE  [PAPER]
 OR $769.25-$771.70 (w 0.32%) | Macro NO TRADE: FOMC decision day (Oct 27-28, 2:00 PM ET; confirmed by search) | VIX 17.47 (-0.2%) | Status: NO TRADE — FOMC decision day per config.md § Macro Event Rules. Opening range recorded only; no signal scan, no position.
+
+## 2026-10-29 — BULLISH BREAKOUT  [PAPER]
+
+**Opening range:** $767.27 - $769.41 (width 0.28%)
+**Signal:** 10:30 close $770.04 and 10:35 close $770.01 (both above OR high); seen at 10:40:28 ET, age 0 bars. WATCHING bullish at the 10:30 bar (10:00 close $769.76 was a bullish 1 of 2 that reverted at 10:05; 10:15 closed $769.40, one cent short of the OR high). Price sat inside the range 10:05-10:25
+**Context:** prior day $769.24-$773.36 | 63-day high $781.62 | VWAP $768.51 | VIX 17.07 (+0.95%) | Macro DATA DAY: Sept PCE/personal income, Q3 GDP advance and jobless claims at 8:30 ET (mega-cap earnings after yesterday's close could not be verified: calendar search returned nothing, so macro check partly unavailable)
+**Filters:** all passed — OR width 0.28% <= 0.30% (data day); SPY 769.87 > VWAP 768.51; VIX 17.07 (<30, +0.95%); prior-day high 773.36 and 63-day high 781.62 more than $1.00 above price
+
+**Entry:**
+- Underlying: SPY (fits $200 budget)
+- Projected target: $771.55 via measured move (OR height 2.14 above 769.41)
+- Strike: $771 call 0DTE (SPY261029C00771000), Δ0.40 — only strikes inside the bound [769.87, 771.55] were 770C (Δ0.50, ask $1.63) and 771C (Δ0.4016, ask $1.16); 771C is closest to 0.40 at or above it
+- Contracts: 1 (floor($200 / ($1.16 x 100)))
+- Fill [PAPER]: $1.16 x 1 = $116.00 at ~10:40:40 ET (ask; ~12 s after the signal was seen)
+
+**Lot A (1 ct, TP +25% = $1.45):** DISASTER SL @ $0.68 10:47:58 (stop $0.70 minus $0.02) — −$48.00 gross (−41%) | peak bid after fill $1.08 (−7%, never above entry), low bid $0.68
+
+**Day:** held 10:40-10:48 (7 min) | P&L −$48.02 (gross −$48.00, fees $0.01 x 2), −41.4% of cost
+**Stop history:** disaster $0.70 never ratcheted; breakeven trigger $1.33 never reached (peak bid after fill $1.08).
+**Execution deviations:** none (no orders placed; PAPER). The stop was seen at a ~20-30 s poll (bid $0.73 at 10:47:48, then $0.68 at 10:47:58); fill simulated at stop minus $0.02 per config. The ask paid ($1.16) was a quote that dropped to $1.05/$1.06 within 12 s as SPY slipped from 769.87 to 769.64.
+
+**Post-trade analysis:** Entry was timely and filters were clean, but the premium started leaking immediately: SPY fell from $769.87 at entry to $768.30 within 7 minutes, never closing a bar back inside the range (structural not tested: the 10:40 bar closed $769.66, the 10:45 bar was still open), so the -40% premium stop was the binding exit. Fifth thin-signal loss in six trades: the confirmation bars closed only $0.60-0.63 above the OR high, and the entry sat at the local high after a 1-of-2 reversion earlier (10:00). The $1.16 premium on a Δ0.40 strike with theta ~$1.2/hr meant a $1.5 SPY pullback was enough for -40%. Worth watching in reviews: confirmation margin over the OR high (here $0.60) as a filter, and the -40% stop vs normal 0DTE noise on ~$1 premiums, same as 10/26. Data day with a gap-down open (-0.45%): a bullish breakout into prior-day lows-to-highs overhead was fighting the gap.
