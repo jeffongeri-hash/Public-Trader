@@ -22,6 +22,7 @@ Running equity = $1,000.00 + sum of `Day P&L` below.
 | 2026-10-27 | TRADED — CALL, TP both lots | +$57.94 | $966.70 |
 | 2026-10-28 | NO TRADE — FOMC decision day | $0.00 | $966.70 |
 | 2026-10-29 | TRADED — CALL, DISASTER SL (1 lot) | −$48.02 | $918.68 |
+| 2026-10-30 | SKIPPED — VIX +14.48% on the day (> 10%) | $0.00 | $918.68 |
 
 ## Entries
 (newest last)
@@ -254,3 +255,11 @@ OR $769.25-$771.70 (w 0.32%) | Macro NO TRADE: FOMC decision day (Oct 27-28, 2:0
 **Execution deviations:** none (no orders placed; PAPER). The stop was seen at a ~20-30 s poll (bid $0.73 at 10:47:48, then $0.68 at 10:47:58); fill simulated at stop minus $0.02 per config. The ask paid ($1.16) was a quote that dropped to $1.05/$1.06 within 12 s as SPY slipped from 769.87 to 769.64.
 
 **Post-trade analysis:** Entry was timely and filters were clean, but the premium started leaking immediately: SPY fell from $769.87 at entry to $768.30 within 7 minutes, never closing a bar back inside the range (structural not tested: the 10:40 bar closed $769.66, the 10:45 bar was still open), so the -40% premium stop was the binding exit. Fifth thin-signal loss in six trades: the confirmation bars closed only $0.60-0.63 above the OR high, and the entry sat at the local high after a 1-of-2 reversion earlier (10:00). The $1.16 premium on a Δ0.40 strike with theta ~$1.2/hr meant a $1.5 SPY pullback was enough for -40%. Worth watching in reviews: confirmation margin over the OR high (here $0.60) as a filter, and the -40% stop vs normal 0DTE noise on ~$1 premiums, same as 10/26. Data day with a gap-down open (-0.45%): a bullish breakout into prior-day lows-to-highs overhead was fighting the gap.
+
+## 2026-10-30 — SKIPPED — VIX (up 14.5% on the day)  [PAPER]
+
+**Opening range:** $759.44 - $761.46 (width 0.27%)
+**Signal:** PUT — 10:10 close $758.60 and 10:15 close $758.25 both below OR low; seen at 10:20:30 ET, age 0 bars (fresh, SPY $758.40, inside the 0.10% chase limit). WATCHING bearish at the 10:10 bar (10:05 close $759.59 was inside by $0.15). SPY gapped down -1.0% at the open (prior close $769.36) and sat inside the range 09:30-10:05
+**Context:** prior day $766.62-$770.76 | 63-day high $781.62 | VWAP $760.23 | VIX 19.69 (+14.48% vs prev close 17.20; 18.92, +10.00% at 09:51; 18.58, +8.2% at 10:00) | Macro NORMAL-ish (month-end; calendar search showed PCE/ECI were Thu 10/29; AAPL/AMZN earnings date unconfirmed, so macro check partly unavailable)
+**Filters:** macro pass (unverified); OR width 0.27% <= 0.40% pass; SPY 758.40 < VWAP 760.23 pass; **VIX FAIL** — +14.48% > +10% limit. Levels and budget not evaluated (first failure ends the day).
+**Outcome:** no trade, no position. Hypothetical outcome not computed. Second VIX-spike gap-down skip (10/22, 10/30) with a PUT signal; track in the monthly filter scorecard.
