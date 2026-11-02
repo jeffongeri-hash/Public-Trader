@@ -23,6 +23,7 @@ Running equity = $1,000.00 + sum of `Day P&L` below.
 | 2026-10-28 | NO TRADE — FOMC decision day | $0.00 | $966.70 |
 | 2026-10-29 | TRADED — CALL, DISASTER SL (1 lot) | −$48.02 | $918.68 |
 | 2026-10-30 | SKIPPED — VIX +14.48% on the day (> 10%) | $0.00 | $918.68 |
+| 2026-11-02 | TRADED — CALL, TP (1 lot) | +$38.98 | $957.66 |
 
 ## Entries
 (newest last)
@@ -263,3 +264,25 @@ OR $769.25-$771.70 (w 0.32%) | Macro NO TRADE: FOMC decision day (Oct 27-28, 2:0
 **Context:** prior day $766.62-$770.76 | 63-day high $781.62 | VWAP $760.23 | VIX 19.69 (+14.48% vs prev close 17.20; 18.92, +10.00% at 09:51; 18.58, +8.2% at 10:00) | Macro NORMAL-ish (month-end; calendar search showed PCE/ECI were Thu 10/29; AAPL/AMZN earnings date unconfirmed, so macro check partly unavailable)
 **Filters:** macro pass (unverified); OR width 0.27% <= 0.40% pass; SPY 758.40 < VWAP 760.23 pass; **VIX FAIL** — +14.48% > +10% limit. Levels and budget not evaluated (first failure ends the day).
 **Outcome:** no trade, no position. Hypothetical outcome not computed. Second VIX-spike gap-down skip (10/22, 10/30) with a PUT signal; track in the monthly filter scorecard.
+
+## 2026-11-02 — BULLISH BREAKOUT  [PAPER]
+
+**Opening range:** $758.72 - $760.57 (width 0.24%)
+**Signal:** 10:05 close $760.78 and 10:10 close $761.53 (both above OR high); seen at 10:15:28 ET, age 0 bars. WATCHING bullish at the 10:05 bar (10:00 close $760.35 inside). Price sat inside the range 09:30-10:00. (OR high printed $760.56 on the first read and settled at $760.57 once the 09:50 bar was final; no effect on any decision.)
+**Context:** prior day $750.36-$761.46 | 63-day high $781.62 | VWAP $759.96 | VIX 18.27 (−6.0%) | Macro NORMAL — ISM Manufacturing 10:00 ET and AMD/PFE/SMCI earnings are not on the config.md data-day list; midterm elections are Tue 11/3. Gap up +0.5% at the open (prior close $755.72)
+**Filters:** all passed — OR width 0.24% <= 0.40%; SPY 761.67 > VWAP 759.96; VIX 18.27 (<30, −6.0%); prior-day high 761.46 already cleared, 63-day high 781.62 more than $1.00 above price
+
+**Entry:**
+- Underlying: SPY (fits $200 budget)
+- Projected target: $762.42 via measured move (OR height 1.85 above 760.57); IV method (~$770.9) was farther away
+- Strike: $762 call 0DTE (SPY261102C00762000), Δ0.47 — only integer strike inside the bound [761.67, 762.42]
+- Contracts: 1 (floor($200 / ($1.48 x 100)))
+- Fill [PAPER]: $1.48 x 1 = $148.00 at ~10:15:40 ET (ask; ~12 s after the signal was seen)
+
+**Lot A (1 ct, TP +25% = $1.85):** TP @ $1.87 10:20:58 — +$39.00 gross (+26%) | low bid while held $1.39 (−6%), peak bid $1.87
+
+**Day:** held 10:15-10:21 (5 min) | P&L +$38.98 (gross +$39.00, fees $0.01 x 2), +26.3% of cost
+**Stop history:** disaster $0.89 never touched (low bid $1.39 at 10:16:15); breakeven trigger $1.70 hit at 10:17:25 (bid $1.72), stop raised to $1.50, never touched (low bid afterward $1.70).
+**Execution deviations:** none (no orders placed; PAPER). TP fill assumes a LIMIT at the polled bid filled in full, per config.md § Mode. Polls ran about every 25-35 s; structural check passed (10:15 bar closed $761.68 vs OR high $760.57).
+
+**Post-trade analysis:** Entry was timely (signal age 0, ~12 s after seen) and the option dipped to $1.39 (−6%) in the first minute as SPY slipped from 761.72 to 761.49, then ran with SPY to 762.47 and hit the +25% target in under 6 minutes. Confirmation margin over the OR high was $0.21 and $0.96, the thin first bar again, but the second bar's strength and a gap-up open into a cleared prior-day high gave follow-through, in contrast to the 10/26 and 10/29 stop-outs. Trade used the full measured-move target almost exactly (SPY high so far ~762.47 vs 762.42). Worth watching in reviews: the 1-contract $1.48 premium needed only ~$0.60 SPY for +25%; the ~$0.39 gain was a quick scalp, not a runner.
