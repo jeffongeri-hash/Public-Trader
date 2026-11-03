@@ -24,6 +24,7 @@ Running equity = $1,000.00 + sum of `Day P&L` below.
 | 2026-10-29 | TRADED — CALL, DISASTER SL (1 lot) | −$48.02 | $918.68 |
 | 2026-10-30 | SKIPPED — VIX +14.48% on the day (> 10%) | $0.00 | $918.68 |
 | 2026-11-02 | TRADED — CALL, TP (1 lot) | +$38.98 | $957.66 |
+| 2026-11-03 | TRADED — CALL, BREAKEVEN stop (1 lot) | −$0.02 | $957.64 |
 
 ## Entries
 (newest last)
@@ -286,3 +287,25 @@ OR $769.25-$771.70 (w 0.32%) | Macro NO TRADE: FOMC decision day (Oct 27-28, 2:0
 **Execution deviations:** none (no orders placed; PAPER). TP fill assumes a LIMIT at the polled bid filled in full, per config.md § Mode. Polls ran about every 25-35 s; structural check passed (10:15 bar closed $761.68 vs OR high $760.57).
 
 **Post-trade analysis:** Entry was timely (signal age 0, ~12 s after seen) and the option dipped to $1.39 (−6%) in the first minute as SPY slipped from 761.72 to 761.49, then ran with SPY to 762.47 and hit the +25% target in under 6 minutes. Confirmation margin over the OR high was $0.21 and $0.96, the thin first bar again, but the second bar's strength and a gap-up open into a cleared prior-day high gave follow-through, in contrast to the 10/26 and 10/29 stop-outs. Trade used the full measured-move target almost exactly (SPY high so far ~762.47 vs 762.42). Worth watching in reviews: the 1-contract $1.48 premium needed only ~$0.60 SPY for +25%; the ~$0.39 gain was a quick scalp, not a runner.
+
+## 2026-11-03 — BULLISH BREAKOUT  [PAPER]
+
+**Opening range:** $752.39 - $754.68 (width 0.30%)
+**Signal:** 10:40 close $754.85 and 10:45 close $755.39 (both above OR high); seen at 10:50:25 ET, age 0 bars. WATCHING bullish at the 10:40 bar. Price sat inside the range 09:30-10:35 (10:15 close $754.48, 10:25 close $754.57 missed the OR high by $0.20 and $0.11)
+**Context:** prior day $751.60-$763.86 | 63-day high $781.62 | VWAP $753.88 | VIX 20.42 (−3.45%) | Macro NORMAL — JOLTS 10:00 ET and midterm elections are not on the config.md data-day list; no Fed speaker or mega-cap earnings found for the day (calendar search was partial, so macro check partly unavailable). Gap up +0.1% at the open (prior close $752.10)
+**Filters:** all passed — OR width 0.30% <= 0.40%; SPY 755.48 > VWAP 753.88; VIX 20.42 (<30, −3.45%); prior-day high 763.86 and 63-day high 781.62 more than $1.00 above price
+
+**Entry:**
+- Underlying: SPY (fits $200 budget)
+- Projected target: $756.97 via measured move (OR height 2.29 above 754.68); IV method (~$765) was farther away
+- Strike: $756 call 0DTE (SPY261103C00756000), Δ0.45 — only integer strike inside the bound [755.48, 756.97]
+- Contracts: 1 (floor($200 / ($1.45 x 100)))
+- Fill [PAPER]: $1.45 x 1 = $145.00 at ~10:50:45 ET (ask; ~20 s after the signal was seen)
+
+**Lot A (1 ct, TP +25% = $1.81):** BREAKEVEN stop @ $1.45 11:18:31 (stop $1.47 minus $0.02) — $0.00 gross (0%) | low bid while held $1.33 (−8%), peak bid $1.80 (+24%, one cent short of the TP trigger $1.8125)
+
+**Day:** held 10:51-11:18 (27 min) | P&L −$0.02 (gross $0.00, fees $0.01 x 2), −0.0% of cost
+**Stop history:** disaster $0.87 never touched (low bid $1.33 at 10:51:09); breakeven trigger $1.67 hit at 11:00:02 (bid $1.73), stop raised to $1.47; bid reached $1.80 at 11:00:34, then ranged $1.54-$1.74 and fell to $1.39 at 11:18:31, stop filled.
+**Execution deviations:** none (no orders placed; PAPER). The stop was seen at a ~35 s poll (bid $1.54 at 11:17:55, then $1.39 at 11:18:31); fill simulated at stop minus $0.02 per config. Structural check passed at every bar close (10:50 $755.31 through 11:10 $756.16, vs OR high $754.68; SPY $755.67 at the exit, still above).
+
+**Post-trade analysis:** Entry was timely (signal age 0, ~20 s after seen). The option dipped to $1.33 (−8%) in the first 20 s, then ran with SPY to ~756.4 and reached a $1.80 bid, one cent below the +25% trigger, twice more touching $1.74. SPY then faded about $0.75 and the option lost 20% of premium in two minutes (1.54 to 1.39) as SPY slipped from 756.4 to 755.67, so the breakeven stop at $1.47 was the binding exit; SPY never came near the OR high ($1.0 above at exit), so the structural exit did not fire. Confirmation margin over the OR high was $0.17 and $0.71, a thin first bar again, but the trade had no follow-through beyond the measured-move target ($756.97 vs SPY high ~756.50): the target sat only $0.5 above the entry, a capped move. Worth watching in reviews: the +25% TP missed by one cent while the breakeven ratchet turned a near-winner into a scratch (same shape as the 10/23 breakeven stop).
