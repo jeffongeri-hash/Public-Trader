@@ -25,6 +25,7 @@ Running equity = $1,000.00 + sum of `Day P&L` below.
 | 2026-10-30 | SKIPPED — VIX +14.48% on the day (> 10%) | $0.00 | $918.68 |
 | 2026-11-02 | TRADED — CALL, TP (1 lot) | +$38.98 | $957.66 |
 | 2026-11-03 | TRADED — CALL, BREAKEVEN stop (1 lot) | −$0.02 | $957.64 |
+| 2026-11-04 | NO BREAKOUT all day (OR width 0.71% would have failed the filter) | $0.00 | $957.64 |
 
 ## Entries
 (newest last)
@@ -309,3 +310,12 @@ OR $769.25-$771.70 (w 0.32%) | Macro NO TRADE: FOMC decision day (Oct 27-28, 2:0
 **Execution deviations:** none (no orders placed; PAPER). The stop was seen at a ~35 s poll (bid $1.54 at 11:17:55, then $1.39 at 11:18:31); fill simulated at stop minus $0.02 per config. Structural check passed at every bar close (10:50 $755.31 through 11:10 $756.16, vs OR high $754.68; SPY $755.67 at the exit, still above).
 
 **Post-trade analysis:** Entry was timely (signal age 0, ~20 s after seen). The option dipped to $1.33 (−8%) in the first 20 s, then ran with SPY to ~756.4 and reached a $1.80 bid, one cent below the +25% trigger, twice more touching $1.74. SPY then faded about $0.75 and the option lost 20% of premium in two minutes (1.54 to 1.39) as SPY slipped from 756.4 to 755.67, so the breakeven stop at $1.47 was the binding exit; SPY never came near the OR high ($1.0 above at exit), so the structural exit did not fire. Confirmation margin over the OR high was $0.17 and $0.71, a thin first bar again, but the trade had no follow-through beyond the measured-move target ($756.97 vs SPY high ~756.50): the target sat only $0.5 above the entry, a capped move. Worth watching in reviews: the +25% TP missed by one cent while the breakeven ratchet turned a near-winner into a scratch (same shape as the 10/23 breakeven stop).
+
+## 2026-11-04 — NO BREAKOUT all day  [PAPER]
+
+**Opening range:** $762.65 - $768.11 (width 0.71%, wide: > 0.40% limit). SPY gapped up +1.15% at the open (prior close $754.35) and ran to the range top by 09:45.
+**Signal:** none. WATCHING bullish (1 of 2) at the 10:10 bar (close $768.24, $0.13 above OR high); 10:15 closed back inside at $767.84. Price then drifted to $764.16-$766 for the rest of the window and never closed below the OR low ($762.65). Final scan at 11:35 ET covered every completed bar through 11:30.
+**Context:** prior day $752.39-$757.07 | 63-day high $781.62 | VWAP ~$766.29 (through 11:30) | VIX 18.14 (-12.9%) | Macro NORMAL (ADP 8:15 and ISM Services 10:00 are not on the config.md data-day list; Fed speakers Logan/Williams/Musalem/Bowman, not the Chair; no mega-cap earnings found; calendar search partial)
+**Filters:** not evaluated (no signal). A signal would have been SKIPPED on OR width 0.71% > 0.40%.
+**Outcome:** no trade, no position, no P&L. Equity unchanged at $957.64.
+**Data note:** the API later revised the 10:00 bar high to $775.64 (apparent stray print); no effect on the OR (09:30-09:55) or any close.
