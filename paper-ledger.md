@@ -26,6 +26,7 @@ Running equity = $1,000.00 + sum of `Day P&L` below.
 | 2026-11-02 | TRADED — CALL, TP (1 lot) | +$38.98 | $957.66 |
 | 2026-11-03 | TRADED — CALL, BREAKEVEN stop (1 lot) | −$0.02 | $957.64 |
 | 2026-11-04 | NO BREAKOUT all day (OR width 0.71% would have failed the filter) | $0.00 | $957.64 |
+| 2026-11-05 | SKIPPED — OR width 1.73% > 0.40% (PUT signal 10:05; VIX +38.8% also fails) | $0.00 | $957.64 |
 
 ## Entries
 (newest last)
@@ -319,3 +320,12 @@ OR $769.25-$771.70 (w 0.32%) | Macro NO TRADE: FOMC decision day (Oct 27-28, 2:0
 **Filters:** not evaluated (no signal). A signal would have been SKIPPED on OR width 0.71% > 0.40%.
 **Outcome:** no trade, no position, no P&L. Equity unchanged at $957.64.
 **Data note:** the API later revised the 10:00 bar high to $775.64 (apparent stray print); no effect on the OR (09:30-09:55) or any close.
+
+## 2026-11-05 — SKIPPED (OR width, VIX)  [PAPER]
+
+**Opening range:** $752.83 - $765.97 (width 1.73%, > 0.40% limit). SPY gapped down about -1.1% at the open (prior close $766.81) and sold off through the whole range.
+**Signal:** PUT confirmed at the 10:05 bar: 10:00 close $752.46 and 10:05 close $751.89, both below OR low. Found on the single full scan at 11:35 ET (the session waited because the OR width filter already ruled out any trade). SPY kept falling to ~$737 at 10:50, then bounced to ~$745.
+**Context:** prior day $762.64-$775.64 (the 11/4 high is the stray print) | 63-day high $781.62 | VIX 16.81 (+1.2%) pre-open, 23.06 (+38.8%) at 11:35 | Macro NORMAL (jobless claims 8:30 and Challenger layoffs are not on the config.md data-day list; October payrolls are tomorrow; no Fed speaker or mega-cap earnings found; calendar search partial)
+**Filters:** FAILED — OR width 1.73% > 0.40%. VIX +38.8% on the day (> 10%) would also fail, as measured at 11:35 ET; its value at 10:05 was not captured.
+**Outcome:** no trade, no position, no P&L. Equity unchanged at $957.64.
+**Review note:** the 10:05 PUT would have been a large winner had it been taken (SPY -$14 over the next 45 min). The OR width filter, which exists to avoid chop, blocked a trend day driven by the gap. Worth counting in the reviews.
