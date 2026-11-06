@@ -27,6 +27,7 @@ Running equity = $1,000.00 + sum of `Day P&L` below.
 | 2026-11-03 | TRADED — CALL, BREAKEVEN stop (1 lot) | −$0.02 | $957.64 |
 | 2026-11-04 | NO BREAKOUT all day (OR width 0.71% would have failed the filter) | $0.00 | $957.64 |
 | 2026-11-05 | SKIPPED — OR width 1.73% > 0.40% (PUT signal 10:05; VIX +38.8% also fails) | $0.00 | $957.64 |
+| 2026-11-06 | NO BREAKOUT all day (payrolls data day; OR width 1.03% would have failed the 0.30% filter) | $0.00 | $957.64 |
 
 ## Entries
 (newest last)
@@ -329,3 +330,11 @@ OR $769.25-$771.70 (w 0.32%) | Macro NO TRADE: FOMC decision day (Oct 27-28, 2:0
 **Filters:** FAILED — OR width 1.73% > 0.40%. VIX +38.8% on the day (> 10%) would also fail, as measured at 11:35 ET; its value at 10:05 was not captured.
 **Outcome:** no trade, no position, no P&L. Equity unchanged at $957.64.
 **Review note:** the 10:05 PUT would have been a large winner had it been taken (SPY -$14 over the next 45 min). The OR width filter, which exists to avoid chop, blocked a trend day driven by the gap. Worth counting in the reviews.
+
+## 2026-11-06 — NO BREAKOUT all day  [PAPER]
+
+**Opening range:** $734.58 - $742.21 (width 1.03%, wide: > 0.30% data-day limit). SPY gapped up +0.25% at the open (prior close $733.00, after the -4.78% sell-off on 11/5) and rallied to the range top by 09:50.
+**Signal:** none. Every completed bar close from 10:00 through 11:30 ET stayed between $737.49 and $741.01, inside the range; no WATCHING bar. Final scan at 11:35 ET covered every completed bar through 11:30.
+**Context:** prior day $732.71-$765.97 | 63-day high $781.62 | VIX 26.43 (-6.2%) pre-open, 23.69 (-15.9%) at 11:35 | Macro DATA DAY — October nonfarm payrolls 8:30 ET; no Fed speaker found (calendar search partial)
+**Filters:** not evaluated (no signal). A signal would have been SKIPPED on OR width 1.03% > 0.30%.
+**Outcome:** no trade, no position, no P&L. Equity unchanged at $957.64.
