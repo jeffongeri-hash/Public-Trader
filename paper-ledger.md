@@ -28,6 +28,7 @@ Running equity = $1,000.00 + sum of `Day P&L` below.
 | 2026-11-04 | NO BREAKOUT all day (OR width 0.71% would have failed the filter) | $0.00 | $957.64 |
 | 2026-11-05 | SKIPPED — OR width 1.73% > 0.40% (PUT signal 10:05; VIX +38.8% also fails) | $0.00 | $957.64 |
 | 2026-11-06 | NO BREAKOUT all day (payrolls data day; OR width 1.03% would have failed the 0.30% filter) | $0.00 | $957.64 |
+| 2026-11-09 | SKIPPED — OR width 0.93% > 0.40% (CALL signal 10:05) | $0.00 | $957.64 |
 
 ## Entries
 (newest last)
@@ -338,3 +339,13 @@ OR $769.25-$771.70 (w 0.32%) | Macro NO TRADE: FOMC decision day (Oct 27-28, 2:0
 **Context:** prior day $732.71-$765.97 | 63-day high $781.62 | VIX 26.43 (-6.2%) pre-open, 23.69 (-15.9%) at 11:35 | Macro DATA DAY — October nonfarm payrolls 8:30 ET; no Fed speaker found (calendar search partial)
 **Filters:** not evaluated (no signal). A signal would have been SKIPPED on OR width 1.03% > 0.30%.
 **Outcome:** no trade, no position, no P&L. Equity unchanged at $957.64.
+
+## 2026-11-09 — SKIPPED (OR width)  [PAPER]
+
+**Opening range:** $741.02 - $747.98 (width 0.93%, > 0.40% limit). SPY gapped up +1.0% at the open (prior close $735.29) and rallied steadily through the whole range.
+**Signal:** CALL confirmed at the 10:05 bar: 10:00 close $748.45 and 10:05 close $748.14, both above OR high (margins $0.47 and $0.16). Found on the single full scan at 11:35 ET (the session waited because the OR width filter already ruled out any trade). SPY kept grinding up to ~$751.7 at 10:55, then ranged $749.4-$750.9.
+**Context:** prior day $734.58-$742.21 | 63-day high $781.62 | VIX 22.97 (-10.4%) pre-open, 20.91 (-18.5%) at 11:35 | Macro NORMAL (no events found for the date; calendar search partial)
+**Filters:** FAILED — OR width 0.93% > 0.40%. Not evaluated further.
+**Outcome:** no trade, no position, no P&L. Equity unchanged at $957.64.
+**Review note:** a 10:05 CALL would have been a modest winner (SPY +$3.5 at the 10:55 high), another gap-driven day where the OR width filter blocked a trend move (see 11/5). The 10:05 signal was a thin $0.16 margin on the second bar.
+
