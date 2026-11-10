@@ -349,3 +349,12 @@ OR $769.25-$771.70 (w 0.32%) | Macro NO TRADE: FOMC decision day (Oct 27-28, 2:0
 **Outcome:** no trade, no position, no P&L. Equity unchanged at $957.64.
 **Review note:** a 10:05 CALL would have been a modest winner (SPY +$3.5 at the 10:55 high), another gap-driven day where the OR width filter blocked a trend move (see 11/5). The 10:05 signal was a thin $0.16 margin on the second bar.
 
+
+## 2026-11-10 — SKIPPED (OR width)  [PAPER]
+
+**Opening range:** $747.05 - $750.77 (width 0.50%, > 0.40% limit). SPY opened -0.6% (prior close $752.69), then rallied off the low to $750.74 by the 09:55 bar.
+**Signal:** CALL confirmed at the 10:05 bar: 10:00 close $751.72 and 10:05 close $751.79, both above OR high (margins $0.95 and $1.02). Found on the single full scan at 11:35 ET (the session waited because the OR width filter already ruled out any trade). The move failed: 10:15 closed back inside the range ($750.52), and SPY sold off to ~$746.0 at 10:50, then ranged $747-$748.5.
+**Context:** prior day $741.02-$752.77 (11/9 bars) | 63-day high $781.62 | VIX 21.02 (+5.5%) pre-open, 20.51 (+3.0%) at 11:35 | Macro NORMAL (no data-day events found; calendar search partial/unreliable)
+**Filters:** FAILED — OR width 0.50% > 0.40%. Not evaluated further (a +5.5% VIX move pre-open would also have been near the no-CALL line of +5%).
+**Outcome:** no trade, no position, no P&L. Equity unchanged at $957.64.
+**Review note:** the filter avoided a losing trade this time: a 10:05 CALL (SPY ~$751.8, peak ~$752.1) would have reversed back inside the range within 10 minutes and hit the structural exit or worse.
