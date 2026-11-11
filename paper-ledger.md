@@ -29,6 +29,8 @@ Running equity = $1,000.00 + sum of `Day P&L` below.
 | 2026-11-05 | SKIPPED — OR width 1.73% > 0.40% (PUT signal 10:05; VIX +38.8% also fails) | $0.00 | $957.64 |
 | 2026-11-06 | NO BREAKOUT all day (payrolls data day; OR width 1.03% would have failed the 0.30% filter) | $0.00 | $957.64 |
 | 2026-11-09 | SKIPPED — OR width 0.93% > 0.40% (CALL signal 10:05) | $0.00 | $957.64 |
+| 2026-11-10 | SKIPPED — OR width 0.50% > 0.40% (CALL signal 10:05) | $0.00 | $957.64 |
+| 2026-11-11 | SKIPPED — OR width 0.402% > 0.40% (CALL signal 10:55) | $0.00 | $957.64 |
 
 ## Entries
 (newest last)
@@ -358,3 +360,12 @@ OR $769.25-$771.70 (w 0.32%) | Macro NO TRADE: FOMC decision day (Oct 27-28, 2:0
 **Filters:** FAILED — OR width 0.50% > 0.40%. Not evaluated further (a +5.5% VIX move pre-open would also have been near the no-CALL line of +5%).
 **Outcome:** no trade, no position, no P&L. Equity unchanged at $957.64.
 **Review note:** the filter avoided a losing trade this time: a 10:05 CALL (SPY ~$751.8, peak ~$752.1) would have reversed back inside the range within 10 minutes and hit the structural exit or worse.
+
+## 2026-11-11 — SKIPPED (OR width)  [PAPER]
+
+**Opening range:** $754.91 - $757.95 (width 0.402%, > 0.40% limit by $0.01 of range). SPY gapped up +0.9% at the open (prior close $749.92), set the range high in the first bar and drifted lower to the low at 09:45. Fixed at the 10:00:20 ET check; the API later revised the 09:45 low to $754.90 (width 0.403%), no effect on the outcome.
+**Signal:** CALL confirmed at the 10:55 bar: 10:50 close $757.98 and 10:55 close $758.70, both above OR high (margins $0.03 and $0.75). Found on the single full scan at 11:35 ET (the session waited because the OR width filter already ruled out any trade). No earlier WATCHING bar: 10:00-10:45 closes stayed $755.44-$757.56, inside the range. After the signal SPY ranged $757.65-$759.32 and was $758.79 at 11:35.
+**Context:** prior day $744.86-$752.14 | 63-day high $781.62 | VWAP ~$757.08 (through 11:30) | VIX 18.33 (-5.8%) at 10:00, 17.84 (-8.3%) at 11:35 | Macro NORMAL (Veterans Day: stocks open, bonds closed; October CPI was 11/10; no Fed Chair speech or mega-cap earnings found; calendar search partial)
+**Filters:** FAILED — OR width 0.402% > 0.40%. Not evaluated further (VWAP, VIX and levels would have passed: SPY above VWAP, VIX down, prior-day and 63-day highs not within $1 above).
+**Outcome:** no trade, no position, no P&L. Equity unchanged at $957.64.
+**Review note:** the narrowest miss of the width filter so far (0.002 pts over). A 10:55 CALL near $758.70 would have seen at most +$0.62 SPY by 11:35 and no structural exit; likely a small winner or scratch. Also fixed: the 11/10 row was missing from the summary table and is added above.
