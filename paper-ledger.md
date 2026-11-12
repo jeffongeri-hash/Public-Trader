@@ -31,6 +31,7 @@ Running equity = $1,000.00 + sum of `Day P&L` below.
 | 2026-11-09 | SKIPPED — OR width 0.93% > 0.40% (CALL signal 10:05) | $0.00 | $957.64 |
 | 2026-11-10 | SKIPPED — OR width 0.50% > 0.40% (CALL signal 10:05) | $0.00 | $957.64 |
 | 2026-11-11 | SKIPPED — OR width 0.402% > 0.40% (CALL signal 10:55) | $0.00 | $957.64 |
+| 2026-11-12 | SKIPPED — OR width 0.69% > 0.40% (CALL signal 10:55) | $0.00 | $957.64 |
 
 ## Entries
 (newest last)
@@ -369,3 +370,12 @@ OR $769.25-$771.70 (w 0.32%) | Macro NO TRADE: FOMC decision day (Oct 27-28, 2:0
 **Filters:** FAILED — OR width 0.402% > 0.40%. Not evaluated further (VWAP, VIX and levels would have passed: SPY above VWAP, VIX down, prior-day and 63-day highs not within $1 above).
 **Outcome:** no trade, no position, no P&L. Equity unchanged at $957.64.
 **Review note:** the narrowest miss of the width filter so far (0.002 pts over). A 10:55 CALL near $758.70 would have seen at most +$0.62 SPY by 11:35 and no structural exit; likely a small winner or scratch. Also fixed: the 11/10 row was missing from the summary table and is added above.
+
+## 2026-11-12 — SKIPPED (OR width)  [PAPER]
+
+**Opening range:** $753.67 - $758.89 (width 0.69%, > 0.40% limit). SPY opened -0.8% (prior close $759.81) at the range low in the first bar and rallied to the range high by the 09:50 bar. Fixed at the 10:00:20 ET check; later API revisions to the 09:45-09:55 bars did not change the high or low.
+**Signal:** CALL confirmed at the 10:55 bar: 10:50 close $759.37 and 10:55 close $760.78, both above OR high (margins $0.48 and $1.89). No earlier WATCHING bar: 10:00-10:45 closes stayed $755.95-$758.55, inside the range. Found on the single full scan at 11:35 ET (the session waited because the OR width filter already ruled out any trade). After the signal SPY ran to $763.03 (11:20 high, through the prior-day high $762.51) and faded to $760.84 at the 11:30 close.
+**Context:** prior day $754.90-$762.51 | 63-day high $781.62 | VWAP ~$758.26 (through 11:30) | VIX 18.84 (+7.7%) pre-open, 18.28 (+4.5%) at 10:00, 17.63 (+0.8%) at 11:35 | Macro NORMAL (weekly jobless claims 8:30 and existing home sales 10:00 are not on the config.md data-day list; October PPI is tomorrow 11/13; no Fed Chair speech or mega-cap earnings found; calendar search partial)
+**Filters:** FAILED — OR width 0.69% > 0.40%. Not evaluated further (SPY above VWAP and the prior-day high $1.73 above the signal close would have passed; the VIX change at 10:55 was not captured, but it sat between +4.5% and +0.8% around then, under the +5% no-CALL line).
+**Outcome:** no trade, no position, no P&L. Equity unchanged at $957.64.
+**Review note:** a 10:55 CALL near $760.78 would have seen up to +$2.25 SPY by 11:20 (about the measured-move target $764.11 minus $1) with no structural exit through 11:35, a likely +25% TP winner. The 5th OR-width skip in 6 sessions (11/5, 11/9, 11/10, 11/11, 11/12); at least 3 of those 5 signals would have been winners. The width filter now blocks almost every trade in this higher-volatility regime, a strong candidate for the next weekly review.
