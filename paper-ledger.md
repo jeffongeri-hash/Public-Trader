@@ -32,6 +32,7 @@ Running equity = $1,000.00 + sum of `Day P&L` below.
 | 2026-11-10 | SKIPPED — OR width 0.50% > 0.40% (CALL signal 10:05) | $0.00 | $957.64 |
 | 2026-11-11 | SKIPPED — OR width 0.402% > 0.40% (CALL signal 10:55) | $0.00 | $957.64 |
 | 2026-11-12 | SKIPPED — OR width 0.69% > 0.40% (CALL signal 10:55) | $0.00 | $957.64 |
+| 2026-11-13 | MISSED — PUT signal 10:05, session started 10:18 (OR width 0.82% > 0.30% PPI data day and VIX +10.3% would also have skipped) | $0.00 | $957.64 |
 
 ## Entries
 (newest last)
@@ -379,3 +380,13 @@ OR $769.25-$771.70 (w 0.32%) | Macro NO TRADE: FOMC decision day (Oct 27-28, 2:0
 **Filters:** FAILED — OR width 0.69% > 0.40%. Not evaluated further (SPY above VWAP and the prior-day high $1.73 above the signal close would have passed; the VIX change at 10:55 was not captured, but it sat between +4.5% and +0.8% around then, under the +5% no-CALL line).
 **Outcome:** no trade, no position, no P&L. Equity unchanged at $957.64.
 **Review note:** a 10:55 CALL near $760.78 would have seen up to +$2.25 SPY by 11:20 (high $763.03, $1.08 short of the measured-move target $764.11) with no structural exit through 11:35, a likely +25% TP winner. The 5th OR-width skip in 6 sessions (11/5, 11/9, 11/10, 11/11, 11/12); at least 3 of those 5 signals would have been winners. The width filter now blocks almost every trade in this higher-volatility regime, a strong candidate for the next weekly review.
+
+## 2026-11-13 — MISSED (late session start; filters would also skip)  [PAPER]
+
+**Opening range:** $753.95 - $760.12 (width 0.82%, > 0.30% data-day limit). SPY opened +0.4% (prior close $757.12) at the range high in the first bar and sold off steadily to the range low at the 09:55 bar.
+**Signal:** PUT confirmed at the 10:05 bar: 10:00 close $752.30 and 10:05 close $752.11, both below OR low (margins $1.65 and $1.84). The routine was scheduled for 13:50 UTC but fired at 15:17 UTC, so the first scan ran at 10:18 ET. The signal bar was age 1 (10:15 bar still forming), but SPY $748.83 was $3.28 (0.44%) past the signal close, beyond the 0.10% chase limit, so the status is MISSED. SPY kept falling: 10:10 close $749.04, 10:15 low $748.71.
+**Context:** prior day $753.67-$763.04 | 63-day high $781.62 | VIX 20.62 (+10.3% vs 18.70) at 10:18 | Macro DATA DAY (October PPI 8:30 ET; no Fed Chair speech or mega-cap earnings found; calendar search partial)
+**Filters:** not reached (MISSED first). Two would have failed anyway: OR width 0.82% > 0.30% (data day) and VIX +10.3% > 10% (measured at 10:18; the 10:10 value was not captured).
+**Hypothetical:** if the session had started on time, a 10:10:20 entry in a ~749P/750P (749P traded $1.17 at the 10:05 close) would have hit TP on both lots within one bar: the 749P closed the 10:10 bar at $2.64 (+125%). The filters would have blocked it, so the real cost of the late start today is $0.
+**Outcome:** no trade, no position, no P&L. Equity unchanged at $957.64.
+**Review note:** the 6th straight session with no trade allowed; again a gap/trend day where the OR width filter would have blocked a large winner (see 11/5, 11/9, 11/12). The late routine start is an execution issue worth fixing in the schedule even though it did not change today's outcome.
