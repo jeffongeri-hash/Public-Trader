@@ -33,6 +33,7 @@ Running equity = $1,000.00 + sum of `Day P&L` below.
 | 2026-11-11 | SKIPPED — OR width 0.402% > 0.40% (CALL signal 10:55) | $0.00 | $957.64 |
 | 2026-11-12 | SKIPPED — OR width 0.69% > 0.40% (CALL signal 10:55) | $0.00 | $957.64 |
 | 2026-11-13 | MISSED — PUT signal 10:05, session started 10:18 (OR width 0.82% > 0.30% PPI data day and VIX +10.3% would also have skipped) | $0.00 | $957.64 |
+| 2026-11-16 | SKIPPED — OR width 0.45% > 0.40% (PUT signal 10:05; VIX +10.4% also fails) | $0.00 | $957.64 |
 
 ## Entries
 (newest last)
@@ -390,3 +391,12 @@ OR $769.25-$771.70 (w 0.32%) | Macro NO TRADE: FOMC decision day (Oct 27-28, 2:0
 **Hypothetical:** if the session had started on time, a 10:10:20 entry in a ~749P/750P (749P traded $1.17 at the 10:05 close) would have hit TP on both lots within one bar: the 749P closed the 10:10 bar at $2.64 (+125%). The filters would have blocked it, so the real cost of the late start today is $0.
 **Outcome:** no trade, no position, no P&L. Equity unchanged at $957.64.
 **Review note:** the 6th straight session with no trade allowed; again a gap/trend day where the OR width filter would have blocked a large winner (see 11/5, 11/9, 11/12). The late routine start is an execution issue worth fixing in the schedule even though it did not change today's outcome.
+
+## 2026-11-16 — SKIPPED (OR width, VIX)  [PAPER]
+
+**Opening range:** $746.45 - $749.82 (width 0.45%, > 0.40% limit). SPY opened -0.6% (prior close $754.37), ranged $746.65-$749.82 for the first 20 minutes and set the range low at the 09:55 bar. Fixed at the 10:00:20 ET check.
+**Signal:** PUT confirmed at the 10:05 bar: 10:00 close $744.97 and 10:05 close $744.94, both below OR low (margins $1.48 and $1.51). Found on the single full scan at 11:35 ET (the session waited because the OR width filter already ruled out any trade). SPY reached a low of $743.31 (10:25 bar), $0.23 short of the measured-move target $743.08, then rallied. The 10:50 bar closed back inside the range ($747.02), and SPY ranged $744.84-$747.37 through 11:35 ($746.55).
+**Context:** prior day $747.88-$760.12 | 63-day high $781.62 | VWAP ~$746.42 (through 11:30) | VIX 20.69 (+7.2% vs 19.30) pre-open, 21.31 (+10.4%) at 10:00, 20.86 (+8.1%) at 11:35 | Macro NORMAL (Empire State manufacturing 8:30 is not on the config.md data-day list; no Fed Chair speech or mega-cap earnings found; calendar search partial)
+**Filters:** FAILED — OR width 0.45% > 0.40%. VIX +10.4% at 10:00 (> 10%) would also fail. Not evaluated further (SPY was below VWAP, and the prior-day low $747.88 sat above price, so it was already cleared).
+**Outcome:** no trade, no position, no P&L. Equity unchanged at $957.64.
+**Review note:** a 10:05 PUT near $744.94 would have seen at most -$1.63 SPY (10:25 low), likely enough for the breakeven ratchet and possibly TP_A, then a structural exit at the 10:50 close: a scratch to small winner. The 7th straight session with no trade allowed and the 6th OR-width skip in 8 sessions.
