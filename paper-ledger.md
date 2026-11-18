@@ -35,6 +35,7 @@ Running equity = $1,000.00 + sum of `Day P&L` below.
 | 2026-11-13 | MISSED — PUT signal 10:05, session started 10:18 (OR width 0.82% > 0.30% PPI data day and VIX +10.3% would also have skipped) | $0.00 | $957.64 |
 | 2026-11-16 | SKIPPED — OR width 0.45% > 0.40% (PUT signal 10:05; VIX +10.4% also fails) | $0.00 | $957.64 |
 | 2026-11-17 | SKIPPED — OR width 0.31% > 0.30% (Retail Sales data day; PUT signal 10:10) | $0.00 | $957.64 |
+| 2026-11-18 | NO BREAKOUT all day (WATCHING bearish 11:15, never confirmed; NVDA data day, OR width 0.89% would have failed the 0.30% filter) | $0.00 | $957.64 |
 
 ## Entries
 (newest last)
@@ -411,3 +412,12 @@ OR $769.25-$771.70 (w 0.32%) | Macro NO TRADE: FOMC decision day (Oct 27-28, 2:0
 **Hypothetical:** 736P (inside the $735.18 target bound, nearest ATM) closed the 10:10 bar at $1.91, so 1 contract (~$191 ≤ $200 budget), entered 10:15:20 → TP_A +25% (~$2.39) touched in the 10:15 bar (high $2.43) and again from 10:30 on: about +$47 (+25%). The option peaked at $9.36 (10:50 bar), +390%.
 **Outcome:** no trade, no position, no P&L. Equity unchanged at $957.64.
 **Review note:** the width filter missed by 0.01 pts and blocked a clean, fast winner: the 8th straight session with no trade allowed and the 7th OR-width skip in 9 sessions (11/5, 11/9, 11/10, 11/11, 11/12, 11/16, 11/17). By the hypotheticals, the width filter has blocked at least 4 winners against 1 avoided loser (11/10) in this run. The 0.40%/0.30% limits look too tight for the current VIX 20-26 regime. This is the main item for the next weekly review (Jeff's decision; no parameter changed here).
+
+## 2026-11-18 — NO BREAKOUT all day  [PAPER]
+
+**Opening range:** $728.58 - $735.06 (width 0.885%, > 0.30% data-day limit). SPY opened +0.1% (prior close $732.44) at the range high in the first bar, sold off to the low at the 09:50 bar and rallied back to $733.66 by the 09:55 close. Fixed at the 10:00:20 ET check; a later API revision to the 09:55 low ($730.51) did not change the high or low.
+**Signal:** none. Every completed bar close from 10:00 through 11:30 ET stayed between $728.62 and $732.44, inside the range, except the 11:15 bar (close $728.25, WATCHING bearish, 1 of 2). The 11:20 bar closed back inside at $729.75 (low $726.79 was intrabar only), so it never confirmed. Final scan at 11:35:20 ET covered every completed bar through 11:30.
+**Context:** prior day $727.00-$739.76 | 63-day high $781.62 | VWAP not computed (no signal) | VIX 23.80 (-6.5% vs 25.46) pre-open, 24.00 (-4.9%) at 10:00, 24.95 (-2.0%) at 11:35 | Macro DATA DAY (NVDA reported after the 11/17 close; pending home sales 10:00 is not on the list; FOMC minutes 2:00 PM, Barr 1:35, Williams 2:30 are outside the entry window and not the Chair; calendar search partial)
+**Filters:** not evaluated (no signal). A signal would have been SKIPPED on OR width 0.885% > 0.30%.
+**Outcome:** no trade, no position, no P&L. Equity unchanged at $957.64.
+**Review note:** the 9th straight session with no trade allowed. Unlike 11/5-11/17 this was a genuine chop day (SPY drifted $4 lower inside a wide range), so the width filter would not have mattered.
