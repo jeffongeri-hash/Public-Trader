@@ -36,6 +36,7 @@ Running equity = $1,000.00 + sum of `Day P&L` below.
 | 2026-11-16 | SKIPPED — OR width 0.45% > 0.40% (PUT signal 10:05; VIX +10.4% also fails) | $0.00 | $957.64 |
 | 2026-11-17 | SKIPPED — OR width 0.31% > 0.30% (Retail Sales data day; PUT signal 10:10) | $0.00 | $957.64 |
 | 2026-11-18 | NO BREAKOUT all day (WATCHING bearish 11:15, never confirmed; NVDA data day, OR width 0.89% would have failed the 0.30% filter) | $0.00 | $957.64 |
+| 2026-11-19 | SKIPPED — OR width 0.61% > 0.40% (PUT signal 10:15; budget also fails: in-bound 732P/731P cost $289/$249 > $200) | $0.00 | $957.64 |
 
 ## Entries
 (newest last)
@@ -421,3 +422,13 @@ OR $769.25-$771.70 (w 0.32%) | Macro NO TRADE: FOMC decision day (Oct 27-28, 2:0
 **Filters:** not evaluated (no signal). A signal would have been SKIPPED on OR width 0.885% > 0.30%.
 **Outcome:** no trade, no position, no P&L. Equity unchanged at $957.64.
 **Review note:** the 9th straight session with no trade allowed. Unlike 11/5-11/17 this was a genuine chop day (SPY drifted $4 lower inside a wide range), so the width filter would not have mattered.
+
+## 2026-11-19 — SKIPPED (OR width)  [PAPER]
+
+**Opening range:** $735.42 - $739.90 (width 0.61%, > 0.40% limit). SPY gapped up +1.0% (prior close $730.20), set the range high in the first bar and the low in the 09:40 bar, then chopped and closed the 09:55 bar near the low ($736.25). Fixed at the 10:00:20 ET check; a later API revision to the 09:45 high ($739.30) did not change the high or low.
+**Signal:** PUT confirmed at the 10:15 bar: 10:10 close $734.14 and 10:15 close $732.62, both below OR low (margins $1.28 and $2.80). The 10:10 bar was WATCHING (bearish, 1 of 2); 10:00 and 10:05 closes ($737.21, $736.15) were inside the range. Found on the single full scan at 11:35:20 ET (the session waited because the OR width filter already ruled out any trade). SPY passed the measured-move target $730.94 at the 10:25 bar and fell to $725.67 (10:35 low, below the prior-day low $726.79), then ranged $726.4-$730.4 and was $728.80 at 11:35. No close back inside the range.
+**Context:** prior day $726.79-$735.06 | 63-day high $781.62 | VWAP $736.88 (through the 10:15 bar) | VIX 22.61 (-7.9% vs 24.56) pre-open, 22.89 (-6.8%) at 10:00, 25.19 (+2.6%) at 11:35 | Macro NORMAL (weekly jobless claims 8:30 is not on the config.md data-day list; no Fed Chair speech or mega-cap earnings after the 11/18 close found; calendar search partial)
+**Filters:** FAILED — OR width 0.61% > 0.40%. Budget would also have failed: the strikes inside the target bound [$730.94, $732.62] closed the 10:15 bar at $2.89 (732P, $289) and $2.49 (731P, $249), both above the $200 budget, and SPX never fits. VWAP would have passed (SPY $732.62 < $736.88) and so would levels (prior-day low $5.83 below). The VIX change at 10:15 was not captured (between -6.8% at 10:00 and +2.6% at 11:35).
+**Hypothetical:** no entry was possible within budget. For reference, the 731P went from $2.49 (10:15 close) to $5.97 (10:35 close, high $6.86), about +140%. A 1-lot entry would have hit TP_A +25% (~$3.11) in the 10:20 bar.
+**Outcome:** no trade, no position, no P&L. Equity unchanged at $957.64.
+**Review note:** the 10th straight session with no trade allowed and the 8th OR-width skip in 11 sessions. It's another gap/trend day where the width filter blocked a fast winner. Today also shows a second constraint: at VIX 22-25, 0DTE premium on in-bound strikes ($2.49-$2.89) is above the $200 budget, so loosening the width filter alone would not have produced this trade. Both points go to the next weekly review (Jeff's decision; no parameter changed here).
