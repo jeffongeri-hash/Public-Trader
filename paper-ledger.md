@@ -37,6 +37,7 @@ Running equity = $1,000.00 + sum of `Day P&L` below.
 | 2026-11-17 | SKIPPED — OR width 0.31% > 0.30% (Retail Sales data day; PUT signal 10:10) | $0.00 | $957.64 |
 | 2026-11-18 | NO BREAKOUT all day (WATCHING bearish 11:15, never confirmed; NVDA data day, OR width 0.89% would have failed the 0.30% filter) | $0.00 | $957.64 |
 | 2026-11-19 | SKIPPED — OR width 0.61% > 0.40% (PUT signal 10:15; budget also fails: in-bound 732P/731P cost $289/$249 > $200) | $0.00 | $957.64 |
+| 2026-11-20 | SKIPPED — OR width 0.78% > 0.30% (monthly opex data day; PUT signal 10:20; budget also fails: in-bound 709P/707P cost $351/$272 > $200) | $0.00 | $957.64 |
 
 ## Entries
 (newest last)
@@ -432,3 +433,13 @@ OR $769.25-$771.70 (w 0.32%) | Macro NO TRADE: FOMC decision day (Oct 27-28, 2:0
 **Hypothetical:** no entry was possible within budget. For reference, the 731P went from $2.49 (10:15 close) to $5.97 (10:35 close, high $6.86), about +140%. A 1-lot entry would have hit TP_A +25% (~$3.11) in the 10:20 bar.
 **Outcome:** no trade, no position, no P&L. Equity unchanged at $957.64.
 **Review note:** the 10th straight session with no trade allowed and the 8th OR-width skip in 11 sessions. It's another gap/trend day where the width filter blocked a fast winner. Today also shows a second constraint: at VIX 22-25, 0DTE premium on in-bound strikes ($2.49-$2.89) is above the $200 budget, so loosening the width filter alone would not have produced this trade. Both points go to the next weekly review (Jeff's decision; no parameter changed here).
+
+## 2026-11-20 — SKIPPED (OR width, data day)  [PAPER]
+
+**Opening range:** $711.72 - $717.27 (width 0.78%, > 0.30% data-day limit). SPY opened -0.3% (prior close $715.87, after a -2.9% day on 11/19), set the low in the first bar and rallied to the range high in the 09:55 bar. Fixed at the 10:00:20 ET check; later API revisions to the 09:45-09:55 bars did not change the high or low.
+**Signal:** PUT confirmed at the 10:20 bar: 10:15 close $711.24 and 10:20 close $709.66, both below OR low (margins $0.48 and $2.06). The 10:15 bar was WATCHING (bearish, 1 of 2); 10:00-10:10 closes ($716.72, $715.21, $713.83) were inside the range. Found on the single full scan at 11:35:20 ET (the session waited because the OR width filter already ruled out any trade). SPY reached the measured-move target $706.17 at the 10:45 bar (low $706.39 intrabar) and closed past it from 11:00 on, falling to $704.08 (11:30 low); it was $704.17 at 11:35. No close back inside the range (highest close after the signal $710.50).
+**Context:** prior day $715.65-$739.90 | 63-day high $781.62 | VWAP $713.71 (through the 10:20 bar) | VIX 30.72 (+8.0% vs 28.44) pre-open, 26.98 (-5.1%) at 10:00, 30.83 (+8.4%) at 11:35 | Macro DATA DAY (monthly opex, 3rd Friday; no Fed Chair speech found; Fed speakers Waller 8:25 and Cook 12:15 per one calendar, neither is the Chair nor in the entry window; calendar search partial)
+**Filters:** FAILED — OR width 0.78% > 0.30% (data day). Budget would also have failed: the strikes inside the target bound [$706.17, $709.66] closed the 10:20 bar at $3.51 (709P, $351) and $2.72 (707P, $272), both above the $200 budget, and SPX never fits. VWAP would have passed (SPY $709.66 < $713.71) and so would levels (prior-day low $715.65 above price, already cleared). The VIX at 10:20 was not captured (between 26.98 at 10:00 and 30.83 at 11:35); if it was above 30 at entry, the VIX filter would have failed too.
+**Hypothetical:** no entry was possible within budget. For reference, the 707P went from $2.72 (10:20 close) to $4.24 (11:00 close, high $4.90) and $4.84 (11:30 close), about +56-78%. A 1-lot entry would have hit TP_A +25% (~$3.40) in the 10:40 bar (high $3.10 at 10:40, $4.00 at 10:45).
+**Outcome:** no trade, no position, no P&L. Equity unchanged at $957.64.
+**Review note:** the 11th straight session with no trade allowed and the 9th OR-width skip in 12 sessions. It's another trend day where the width filter blocked a winner, and again (as on 11/19) in-bound 0DTE premium at VIX ~27-31 is above the $200 budget, so the width filter is not the only constraint. Both points go to the next weekly review (Jeff's decision; no parameter changed here).
