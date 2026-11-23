@@ -38,6 +38,7 @@ Running equity = $1,000.00 + sum of `Day P&L` below.
 | 2026-11-18 | NO BREAKOUT all day (WATCHING bearish 11:15, never confirmed; NVDA data day, OR width 0.89% would have failed the 0.30% filter) | $0.00 | $957.64 |
 | 2026-11-19 | SKIPPED — OR width 0.61% > 0.40% (PUT signal 10:15; budget also fails: in-bound 732P/731P cost $289/$249 > $200) | $0.00 | $957.64 |
 | 2026-11-20 | SKIPPED — OR width 0.78% > 0.30% (monthly opex data day; PUT signal 10:20; budget also fails: in-bound 709P/707P cost $351/$272 > $200) | $0.00 | $957.64 |
+| 2026-11-23 | SKIPPED — OR width 1.57% > 0.40% (CALL signal 10:25; budget also fails: in-bound 727C/729C cost $290/$205 > $200) | $0.00 | $957.64 |
 
 ## Entries
 (newest last)
@@ -443,3 +444,13 @@ OR $769.25-$771.70 (w 0.32%) | Macro NO TRADE: FOMC decision day (Oct 27-28, 2:0
 **Hypothetical:** no entry was possible within budget. For reference, the 707P went from $2.72 (10:20 close) to $4.24 (11:00 close, high $4.90) and $4.84 (11:30 close), about +56-78%. A 1-lot entry would have hit TP_A +25% (~$3.40) in the 10:45 bar (high $4.00; the 10:25-10:40 highs topped out at $3.10).
 **Outcome:** no trade, no position, no P&L. Equity unchanged at $957.64.
 **Review note:** the 11th straight session with no trade allowed and the 9th OR-width skip in 12 sessions. It's another trend day where the width filter blocked a winner, and again (as on 11/19) in-bound 0DTE premium at VIX ~27-31 is above the $200 budget, so the width filter is not the only constraint. Both points go to the next weekly review (Jeff's decision; no parameter changed here).
+
+## 2026-11-23 — SKIPPED (OR width)  [PAPER]
+
+**Opening range:** $713.53 - $724.81 (width 1.57%, > 0.40% limit). SPY gapped up +5.0% (prior close $689.81, after a -9.9% day on 11/20), set the range high in the first bar ($724.33 open) and sold off to the low in the 09:40 bar, then recovered to $720.99 by the 09:55 close. Fixed at the 10:00:20 ET check; a later API revision to the 09:45-09:55 volumes did not change the high or low.
+**Signal:** CALL confirmed at the 10:25 bar: 10:20 close $726.32 and 10:25 close $726.14, both above OR high (margins $1.51 and $1.33). The 10:20 bar was WATCHING (bullish, 1 of 2); 10:00-10:15 closes ($721.82, $720.31, $722.55, $724.22) were inside the range. Found on the single full scan at 11:35:20 ET (the session waited because the OR width filter already ruled out any trade). SPY peaked at $727.98 (10:30 high), far short of the measured-move target $736.09. Closes stayed above the range through 10:40 ($724.96), then the 10:45 close $723.78 was back inside (STRUCTURAL), and SPY ranged $722.4-$725.5 until 11:35 ($723.32).
+**Context:** prior day $686.75-$718.29 | 63-day high $781.62 | VWAP $720.22 (through the 10:25 bar) | VIX 31.93 (-11.0% vs 35.89) pre-open, 27.66 (-22.9%) at 10:00, 27.69 (-22.9%) at 11:35 | Macro NORMAL (no 8:30 release on the config.md list, no Fed Chair speech or mega-cap earnings found; Thanksgiving week, 11/26 closed and 11/27 half day; calendar search partial)
+**Filters:** FAILED — OR width 1.57% > 0.40%. Budget would also have failed: in-bound strikes closed the 10:25 bar at $2.90 (727C, $290) and $2.05 (729C, $205), both above the $200 budget (strikes 730C+ not checked, and likely |Δ| < 0.40), and SPX never fits. VWAP would have passed (SPY $726.14 > $720.22), VIX too (27.7 < 30 and falling), and levels too (prior-day high $718.29 already cleared, 63-day high $55 above).
+**Hypothetical:** no entry was possible within budget. For reference, the 729C entered at the 10:25 close of $2.05 (1 ct) → TP_A +25% ($2.56) touched in the 10:30 bar (high $2.79): about +$51. Without that TP, STRUCTURAL at the 10:45 close would have been about $1.32 (-36%). The 727C did the same ($2.90 → 10:30 high $3.84, TP $3.63 touched; 10:45 close $1.97).
+**Outcome:** no trade, no position, no P&L. Equity unchanged at $957.64.
+**Review note:** the 12th straight session with no trade allowed and the 10th OR-width skip in 13 sessions. Unlike 11/17-11/20, this was a short-lived breakout that reverted inside the range within 20 minutes. Only a fast TP fill would have made it a winner, otherwise it was a ~-36% structural loss. Premium at VIX ~28 again exceeds the $200 budget. For the weekly review (Jeff's decision; no parameter changed here).
