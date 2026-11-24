@@ -39,6 +39,7 @@ Running equity = $1,000.00 + sum of `Day P&L` below.
 | 2026-11-19 | SKIPPED — OR width 0.61% > 0.40% (PUT signal 10:15; budget also fails: in-bound 732P/731P cost $289/$249 > $200) | $0.00 | $957.64 |
 | 2026-11-20 | SKIPPED — OR width 0.78% > 0.30% (monthly opex data day; PUT signal 10:20; budget also fails: in-bound 709P/707P cost $351/$272 > $200) | $0.00 | $957.64 |
 | 2026-11-23 | SKIPPED — OR width 1.57% > 0.40% (CALL signal 10:25; budget also fails: in-bound 727C/729C cost $290/$205 > $200) | $0.00 | $957.64 |
+| 2026-11-24 | NO BREAKOUT all day (WATCHING bullish 10:00 by $0.01, never confirmed; OR width 1.14% would have failed the filter) | $0.00 | $957.64 |
 
 ## Entries
 (newest last)
@@ -454,3 +455,12 @@ OR $769.25-$771.70 (w 0.32%) | Macro NO TRADE: FOMC decision day (Oct 27-28, 2:0
 **Hypothetical:** no entry was possible within budget. For reference, the 729C entered at the 10:25 close of $2.05 (1 ct) → TP_A +25% ($2.56) touched in the 10:30 bar (high $2.79): about +$51. Without that TP, STRUCTURAL at the 10:45 close would have been about $1.32 (-36%). The 727C did the same ($2.90 → 10:30 high $3.84, TP $3.63 touched; 10:45 close $1.97).
 **Outcome:** no trade, no position, no P&L. Equity unchanged at $957.64.
 **Review note:** the 12th straight session with no trade allowed and the 10th OR-width skip in 13 sessions. Unlike 11/17-11/20, this was a short-lived breakout that reverted inside the range within 20 minutes. Only a fast TP fill would have made it a winner, otherwise it was a ~-36% structural loss. Premium at VIX ~28 again exceeds the $200 budget. For the weekly review (Jeff's decision; no parameter changed here).
+
+## 2026-11-24 — NO BREAKOUT all day  [PAPER]
+
+**Opening range:** $712.14 - $720.34 (width 1.14%, > 0.40% limit). SPY opened -1.0% (prior close $722.29), set the low in the first bar and climbed to the range high in the 09:50 bar. Fixed at the 10:00:20 ET check; later API revisions to the 09:45-09:55 bars did not change the high or low.
+**Signal:** none. The only close beyond a boundary was the 10:00 bar at $720.35, $0.01 above OR high (WATCHING, bullish, 1 of 2). The 10:05 close $718.80 was back inside, and every close from 10:05 to 11:30 stayed inside the range: SPY drifted down to $713.28 (11:00 close, low $712.37 at 11:05) and never closed below $712.14. Confirmed on the single full scan at 11:35:20 ET (the session waited because the OR width filter already ruled out any trade). SPY was $714.35 at 11:35.
+**Context:** prior day $713.53-$727.98 | 63-day high $781.62 | VWAP $715.84 (through the 11:30 bar) | VIX 29.49 (+10.7% vs 26.62) pre-open, 27.13 (+1.9%) at 10:00, 28.45 (+6.9%) at 11:35 | Macro NORMAL (PCE, GDP 2nd estimate and possibly retail sales are listed for 11/25, not today; no Fed Chair speech or mega-cap earnings after the 11/23 close found; Thanksgiving week, 11/26 closed and 11/27 half day; calendar search partial)
+**Filters:** not reached (no signal). OR width 1.14% > 0.40% would have failed.
+**Outcome:** no trade, no position, no P&L. Equity unchanged at $957.64.
+**Review note:** the 13th straight session with no trade allowed. Today was a wide-range chop day with no confirmed break, the case the width filter is meant to avoid. For the weekly review (Jeff's decision; no parameter changed here).
