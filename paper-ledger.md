@@ -40,6 +40,7 @@ Running equity = $1,000.00 + sum of `Day P&L` below.
 | 2026-11-20 | SKIPPED — OR width 0.78% > 0.30% (monthly opex data day; PUT signal 10:20; budget also fails: in-bound 709P/707P cost $351/$272 > $200) | $0.00 | $957.64 |
 | 2026-11-23 | SKIPPED — OR width 1.57% > 0.40% (CALL signal 10:25; budget also fails: in-bound 727C/729C cost $290/$205 > $200) | $0.00 | $957.64 |
 | 2026-11-24 | NO BREAKOUT all day (WATCHING bullish 10:00 by $0.01, never confirmed; OR width 1.14% would have failed the filter) | $0.00 | $957.64 |
+| 2026-11-25 | NO BREAKOUT all day (PCE/GDP data day; WATCHING bullish 10:00, never confirmed; OR width 1.19% > 0.30% and VIX 31.3 +18.6% would have failed) | $0.00 | $957.64 |
 
 ## Entries
 (newest last)
@@ -464,3 +465,12 @@ OR $769.25-$771.70 (w 0.32%) | Macro NO TRADE: FOMC decision day (Oct 27-28, 2:0
 **Filters:** not reached (no signal). OR width 1.14% > 0.40% would have failed.
 **Outcome:** no trade, no position, no P&L. Equity unchanged at $957.64.
 **Review note:** the 13th straight session with no trade allowed. Today was a wide-range chop day with no confirmed break, the case the width filter is meant to avoid. For the weekly review (Jeff's decision; no parameter changed here).
+
+## 2026-11-25 — NO BREAKOUT all day  [PAPER]
+
+**Opening range:** $695.45 - $703.81 (width 1.19%, > 0.30% data-day limit). SPY gapped down -2.2% (open $703.20 vs prior close $718.78), sold off to the range low in the 09:45 bar, then rallied to the range high in the 09:55 bar (close $703.53). Fixed at the 10:00:20 ET check; later API revisions to the 09:45-09:55 bars did not change the high or low.
+**Signal:** none. The only close beyond a boundary was the 10:00 bar at $704.20, $0.39 above OR high (WATCHING, bullish, 1 of 2). The 10:05 close $702.74 was back inside, and every close from 10:05 to 11:30 stayed inside the range ($697.99-$702.74): SPY faded to the $698-$700 area by 10:15 and chopped there. Confirmed on the single full scan at 11:35:20 ET (the session waited because the OR width and VIX filters already ruled out any trade). SPY was $698.69 at 11:35.
+**Context:** prior day $712.14-$720.93 | 63-day high $781.62 | VWAP $700.11 (through the 11:30 bar) | VIX 31.47 (+19.4% vs 26.36) pre-open, 31.26 (+18.6%) at 10:00, 33.71 (+27.9%) at 11:35 | Macro DATA DAY (Q3 GDP 2nd estimate and October PCE at 8:30 ET per the BEA schedule; no Fed Chair speech found; Thanksgiving 11/26 closed, 11/27 half day; one calendar site claimed a 1 PM close today, which conflicts with the schedule-setup.md holiday list and the full bar schedule (79 expected bars); calendar search partial)
+**Filters:** not reached (no signal). OR width 1.19% > 0.30% (data day) and VIX (> 30 and > +10% on the day) would both have failed.
+**Outcome:** no trade, no position, no P&L. Equity unchanged at $957.64.
+**Review note:** the 14th straight session with no trade allowed. A wide-range, high-VIX chop day with no confirmed break, the case the width and VIX filters are meant to avoid. For the weekly review (Jeff's decision; no parameter changed here).
