@@ -41,6 +41,7 @@ Running equity = $1,000.00 + sum of `Day P&L` below.
 | 2026-11-23 | SKIPPED — OR width 1.57% > 0.40% (CALL signal 10:25; budget also fails: in-bound 727C/729C cost $290/$205 > $200) | $0.00 | $957.64 |
 | 2026-11-24 | NO BREAKOUT all day (WATCHING bullish 10:00 by $0.01, never confirmed; OR width 1.14% would have failed the filter) | $0.00 | $957.64 |
 | 2026-11-25 | NO BREAKOUT all day (PCE/GDP data day; WATCHING bullish 10:00, never confirmed; OR width 1.19% > 0.30% and VIX 31.3 +18.6% would have failed) | $0.00 | $957.64 |
+| 2026-11-27 | NO TRADE — half-day session (1:00 PM ET close) | $0.00 | $957.64 |
 
 ## Entries
 (newest last)
@@ -474,3 +475,6 @@ OR $769.25-$771.70 (w 0.32%) | Macro NO TRADE: FOMC decision day (Oct 27-28, 2:0
 **Filters:** not reached (no signal). OR width 1.19% > 0.30% (data day) and VIX (> 30 and > +10% on the day) would both have failed.
 **Outcome:** no trade, no position, no P&L. Equity unchanged at $957.64.
 **Review note:** the 14th straight session with no trade allowed. A wide-range, high-VIX chop day with no confirmed break, the case the width and VIX filters are meant to avoid. For the weekly review (Jeff's decision; no parameter changed here).
+
+## 2026-11-27 — NO TRADE  [PAPER]
+OR $720.00-$726.09 (w 0.84%) | Macro NO TRADE: half-day session (day after Thanksgiving; NYSE closes 1:00 PM ET, options 1:15 PM; 43 expected bars confirms it; on the schedule-setup.md half-day list) | VIX 25.41 (-10.2% vs 28.29) pre-open, 27.36 (-3.3%) at 10:00 | Status: NO TRADE — half-day session per config.md § Macro Event Rules. Opening range recorded only; no signal scan, no position. SPY gapped up +1.3% (open $725.86 vs prior close $716.70), set the range high in the first bar and drifted to the low in the 09:55 bar (close $720.09). Prior day $695.45-$718.43 | 63-day high $781.62. Fixed at the 10:00:20 ET check. Session started 08:51 ET (earlier than the 9:55 ET schedule) and waited for the range. Equity unchanged at $957.64.
